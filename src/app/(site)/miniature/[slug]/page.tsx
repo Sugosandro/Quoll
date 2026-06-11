@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!miniatura) return { title: 'Miniatura non trovata' }
   return {
     title: `${miniatura.nome} · Quoll`,
-    description: miniatura.descrizione ?? `Miniatura stampata in 3D: ${miniatura.nome}`,
+    description: Array.isArray(miniatura.descrizione) ? `Miniatura stampata in 3D: ${miniatura.nome}` : (miniatura.descrizione ?? `Miniatura stampata in 3D: ${miniatura.nome}`),
   }
 }
 
