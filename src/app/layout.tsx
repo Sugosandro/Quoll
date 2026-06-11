@@ -13,6 +13,11 @@ export const metadata: Metadata = {
     icon: '/logo.png',
     apple: '/logo.png',
   },
+  openGraph: {
+    title: 'Quoll · Stampa 3D professionale su ordinazione',
+    description: 'Miniature 3D stampate in PLA e resina su ordinazione: personaggi, veicoli, edifici fantasy, sci-fi, storici e horror.',
+    images: [{ url: '/logo.png' }],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
