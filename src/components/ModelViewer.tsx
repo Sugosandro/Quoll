@@ -33,7 +33,7 @@ export default function ModelViewer({ src, poster }: ModelViewerProps) {
         // meshoptimizer non disponibile — file senza Meshopt funzionano comunque
       }
 
-      if (cancelled) return
+      if (cancelled || !container) return
 
       // 3. Solo ora crea l'elemento (il decoder è già pronto)
       const el = document.createElement('model-viewer')
