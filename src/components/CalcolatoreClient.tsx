@@ -44,6 +44,7 @@ export default function CalcolatoreClient({ profili }: Props) {
   const [oreLavoro, setOreLavoro]         = useState(1)
   const [costoOraLavoro, setCostoOraLav]  = useState(14)
   const [markup, setMarkup]               = useState(40)
+  const [commissione, setCommissione]     = useState(0)
   const [profiloAttivoId, setProfiloAttivoId] = useState<string | null>(null)
 
   const profiloAttivo = profili.find(p => p._id === profiloAttivoId) ?? null
@@ -62,6 +63,8 @@ export default function CalcolatoreClient({ profili }: Props) {
   const costoLavoro    = oreLavoro * costoOraLavoro
   const totaleCosti    = costoMateriale + costoElettr + costoLavoro
   const prezzoConsigliato = totaleCosti * (1 + markup / 100)
+  const prezzoEsposto  = commissione > 0 ? prezzoConsigliato / (1 - commissione / 100) : prezzoConsigliato
+  const costoCommissione = prezzoEsposto - prezzoConsigliato
 
   const fmt = (n: number) => `€${n.toFixed(2)}`
 
@@ -136,6 +139,7 @@ export default function CalcolatoreClient({ profili }: Props) {
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Margine</p>
             <Field label="Markup" value={markup} onChange={setMarkup} min={0} max={500} suffix="%" />
+            <Field label="Commissione piattaforma" hint="(es. Etsy, Amazon)" value={commissione} onChange={setCommissione} min={0} max={60} step={0.5} suffix="%" />
           </div>
         </div>
 
@@ -150,11 +154,24 @@ export default function CalcolatoreClient({ profili }: Props) {
           </div>
 
           <div className="bg-indigo-600 rounded-2xl p-6 text-white">
-            <p className="text-indigo-200 text-sm mb-1">Prezzo consigliato (markup {markup}%)</p>
-            <p className="text-4xl font-bold">{fmt(prezzoConsigliato)}</p>
-            <p className="text-indigo-200 text-sm mt-2">
-              Margine: {fmt(prezzoConsigliato - totaleCosti)} · {markup}% sul costo
-            </p>
+            {commissione > 0 ? (
+              <>
+                <p className="text-indigo-200 text-sm mb-1">Prezzo da esporre (dopo commissione {commissione}%)</p>
+                <p className="text-4xl font-bold">{fmt(prezzoEsposto)}</p>
+                <div className="mt-3 pt-3 border-t border-indigo-500 space-y-1 text-sm text-indigo-200">
+                  <div className="flex justify-between"><span>Tuo incasso (markup {markup}%)</span><span className="font-semibold text-white">{fmt(prezzoConsigliato)}</span></div>
+                  <div className="flex justify-between"><span>Commissione {commissione}%</span><span>{fmt(costoCommissione)}</span></div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-indigo-200 text-sm mb-1">Prezzo consigliato (markup {markup}%)</p>
+                <p className="text-4xl font-bold">{fmt(prezzoConsigliato)}</p>
+                <p className="text-indigo-200 text-sm mt-2">
+                  Margine: {fmt(prezzoConsigliato - totaleCosti)} · {markup}% sul costo
+                </p>
+              </>
+            )}
           </div>
 
           <div className="bg-gray-50 rounded-2xl border border-gray-200 p-5 text-sm text-gray-500">

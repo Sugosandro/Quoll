@@ -30,10 +30,14 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+        <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href}
-              className={`hover:text-indigo-600 transition-colors ${pathname === l.href ? 'text-indigo-600 font-semibold' : ''}`}>
+              className={`px-3.5 py-2 rounded-lg transition-colors font-medium ${
+                pathname === l.href
+                  ? 'bg-indigo-50 text-indigo-600'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}>
               {l.label}
             </Link>
           ))}

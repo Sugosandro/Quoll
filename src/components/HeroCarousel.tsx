@@ -92,6 +92,13 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
             className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-base transition-colors shadow-lg shadow-indigo-900/40">
             Esplora il catalogo
           </Link>
+          <Link href="/calcolatore"
+            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white font-semibold text-base transition-colors backdrop-blur">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Calcola il prezzo
+          </Link>
           <a href="https://wa.me/393338479871" target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white font-semibold text-base transition-colors backdrop-blur">
             Richiedi un preventivo
