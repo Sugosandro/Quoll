@@ -1,0 +1,193 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
+import { urlFor } from '@/sanity/lib/image'
+import type { SanityImageSource } from '@sanity/image-url'
+import VideoEmbed from '@/components/VideoEmbed'
+
+function parseVideo(url: string): { platform: 'youtube' | 'vimeo'; id: string } | null {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (yt) return { platform: 'youtube', id: yt[1] }
+  const vm = url.match(/vimeo\.com\/(\d+)/)
+  if (vm) return { platform: 'vimeo', id: vm[1] }
+  return null
+}
+
+type GalleryItem =
+  | { kind: 'image'; source: SanityImageSource; index: number }
+  | { kind: 'video'; url: string; platform: 'youtube' | 'vimeo'; id: string }
+
+interface ProductGalleryProps {
+  immagini: SanityImageSource[]
+  nome: string
+  videoUrls?: string[]
+}
+
+export default function ProductGallery({ immagini, nome, videoUrls }: ProductGalleryProps) {
+  const imgs = immagini ?? []
+  const vids = videoUrls ?? []
+  const items: GalleryItem[] = [
+    ...imgs.map((source, index) => ({ kind: 'image' as const, source, index })),
+    ...vids
+      .map((url) => { const p = parseVideo(url); return p ? { kind: 'video' as const, url, ...p } : null })
+      .filter((x): x is GalleryItem & { kind: 'video' } => x !== null),
+  ]
+
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [lightbox, setLightbox] = useState(false)
+
+  const active = items[activeIndex]
+  const isVideo = active?.kind === 'video'
+
+  const prev = useCallback(() => setActiveIndex((i) => (i - 1 + items.length) % items.length), [items.length])
+  const next = useCallback(() => setActiveIndex((i) => (i + 1) % items.length), [items.length])
+
+  useEffect(() => {
+    if (!lightbox) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(false)
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [lightbox, prev, next])
+
+  if (items.length === 0) return null
+
+  const mainImageUrl = active?.kind === 'image'
+    ? urlFor(active.source).width(900).height(900).fit('crop').auto('format').url()
+    : null
+
+  return (
+    <>
+      <div className="space-y-3">
+        {/* Main display */}
+        <div
+          className={`relative rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 ${isVideo ? 'aspect-video' : 'aspect-square'} ${!isVideo ? 'cursor-zoom-in' : ''}`}
+          onClick={() => !isVideo && setLightbox(true)}
+        >
+          {active?.kind === 'image' && mainImageUrl && (
+            <Image
+              src={mainImageUrl}
+              alt={`${nome} - immagine ${active.index + 1}`}
+              fill priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+            />
+          )}
+          {active?.kind === 'video' && (
+            <VideoEmbed
+              platform={active.platform}
+              id={active.id}
+              title={`Video ${nome}`}
+              className="absolute inset-0 w-full h-full"
+            />
+          )}
+          {!isVideo && (
+            <div className="absolute bottom-2 right-2 bg-black/40 text-white rounded-lg p-1.5 pointer-events-none">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+              </svg>
+            </div>
+          )}
+          {items.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prev() }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 transition-colors"
+                aria-label="Precedente"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); next() }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 transition-colors"
+                aria-label="Successiva"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Thumbnails */}
+        {items.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {items.map((item, i) => (
+              <button key={i} onClick={() => setActiveIndex(i)}
+                className={`relative flex-none w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${i === activeIndex ? 'border-indigo-500' : 'border-transparent hover:border-gray-300'}`}>
+                {item.kind === 'image' ? (
+                  <Image src={urlFor(item.source).width(160).height(160).fit('crop').auto('format').url()}
+                    alt={`${nome} thumbnail ${i + 1}`} fill sizes="64px" className="object-cover" />
+                ) : (
+                  <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+                    {item.platform === 'youtube' && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={`https://img.youtube.com/vi/${item.id}/mqdefault.jpg`}
+                        alt="video" className="absolute inset-0 w-full h-full object-cover opacity-70" />
+                    )}
+                    {item.platform === 'vimeo' && <div className="absolute inset-0 bg-blue-800/80" />}
+                    <svg className="relative z-10 w-6 h-6 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && active?.kind === 'image' && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={() => setLightbox(false)}
+        >
+          <div className="relative w-full h-full max-w-5xl max-h-screen p-4 flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={urlFor(active.source).width(1800).height(1800).fit('max').auto('format').url()}
+              alt={`${nome} - fullscreen`}
+              fill
+              className="object-contain"
+              sizes="100vw"
+            />
+          </div>
+
+          {/* Close */}
+          <button onClick={() => setLightbox(false)}
+            className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/40 rounded-full p-2 transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Nav arrows */}
+          {items.filter(i => i.kind === 'image').length > 1 && (
+            <>
+              <button onClick={prev}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/40 rounded-full p-3 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button onClick={next}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/40 rounded-full p-3 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
