@@ -35,7 +35,7 @@ export const finitura = defineType({
     }),
   ],
   orderings: [
-    { title: 'Ordine', by: [{ field: 'ordine', direction: 'asc' }] },
+    { name: 'ordine', title: 'Ordine', by: [{ field: 'ordine', direction: 'asc' }] },
   ],
   preview: {
     select: { title: 'nome', ore: 'oreLavoro', visibile: 'visibileAlPubblico' },
