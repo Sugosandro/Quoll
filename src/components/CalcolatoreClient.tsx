@@ -67,13 +67,18 @@ export default function CalcolatoreClient({ profili }: Props) {
     setMarkup(p.markupPct)
   }
 
-  const costoMateriale = (peso / 1000) * costoFilamento
-  const costoElettr    = (wattaggioStampante / 1000) * oreStampa * costoKwh
-  const costoLavoro    = oreLavoro * costoOraLavoro
-  const totaleCosti    = costoMateriale + costoElettr + costoLavoro
-  const prezzoConsigliato = totaleCosti * (1 + markup / 100)
-  const prezzoEsposto  = commissione > 0 ? prezzoConsigliato / (1 - commissione / 100) : prezzoConsigliato
-  const costoCommissione = prezzoEsposto - prezzoConsigliato
+  const costoMateriale    = (peso / 1000) * costoFilamento
+  const costoElettr       = (wattaggioStampante / 1000) * oreStampa * costoKwh
+  const costoLavoro       = oreLavoro * costoOraLavoro
+  const totaleProduzione  = costoMateriale + costoElettr + costoLavoro
+  // La commissione è trattata come costo: quota da mettere da parte su ogni € di produzione
+  // affinché dopo che la piattaforma trattiene la sua %, rimanga esattamente il totale produzione
+  const quotaCommissione  = commissione > 0 ? totaleProduzione * commissione / (100 - commissione) : 0
+  const totaleCosti       = totaleProduzione + quotaCommissione
+  const markupEuro        = totaleCosti * markup / 100
+  const prezzoEsposto     = totaleCosti * (1 + markup / 100)
+  // Quanto incassi davvero dopo che la piattaforma trattiene la sua %
+  const tuoIncasso        = prezzoEsposto * (1 - commissione / 100)
 
   const fmt = (n: number) => `€${n.toFixed(2)}`
 
@@ -184,27 +189,22 @@ export default function CalcolatoreClient({ profili }: Props) {
             <Row label="Materiale" value={fmt(costoMateriale)} />
             <Row label="Elettricità" value={fmt(costoElettr)} />
             <Row label="Lavoro manuale" value={fmt(costoLavoro)} />
+            {commissione > 0 && (
+              <Row label={`Commissione (${commissione}%)`} value={fmt(quotaCommissione)} />
+            )}
             <Row label="Totale costi" value={fmt(totaleCosti)} highlight />
+            <div className="mt-3">
+              <Row label={`Markup (${markup}%)`} value={`+${fmt(markupEuro)}`} />
+            </div>
           </div>
 
           <div className="bg-indigo-600 rounded-2xl p-6 text-white">
-            {commissione > 0 ? (
-              <>
-                <p className="text-indigo-200 text-sm mb-1">Prezzo da esporre (dopo commissione {commissione}%)</p>
-                <p className="text-4xl font-bold">{fmt(prezzoEsposto)}</p>
-                <div className="mt-3 pt-3 border-t border-indigo-500 space-y-1 text-sm text-indigo-200">
-                  <div className="flex justify-between"><span>Tuo incasso (markup {markup}%)</span><span className="font-semibold text-white">{fmt(prezzoConsigliato)}</span></div>
-                  <div className="flex justify-between"><span>Commissione {commissione}%</span><span>{fmt(costoCommissione)}</span></div>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-indigo-200 text-sm mb-1">Prezzo consigliato (markup {markup}%)</p>
-                <p className="text-4xl font-bold">{fmt(prezzoConsigliato)}</p>
-                <p className="text-indigo-200 text-sm mt-2">
-                  Margine: {fmt(prezzoConsigliato - totaleCosti)} · {markup}% sul costo
-                </p>
-              </>
+            <p className="text-indigo-200 text-sm mb-1">Prezzo da esporre</p>
+            <p className="text-4xl font-bold">{fmt(prezzoEsposto)}</p>
+            {commissione > 0 && (
+              <p className="text-indigo-300 text-xs mt-2">
+                Tuo incasso netto (dopo commissione): {fmt(tuoIncasso)}
+              </p>
             )}
           </div>
 

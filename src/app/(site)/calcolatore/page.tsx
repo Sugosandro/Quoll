@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import CalcolatorePublicoClient from '@/components/CalcolatorePublicoClient'
-import { getProfiliPrezzo } from '@/sanity/lib/queries'
+import { getProfiliPrezzo, getSiteSettings } from '@/sanity/lib/queries'
 
 export const revalidate = 60
 
@@ -10,7 +10,10 @@ export const metadata: Metadata = {
 }
 
 export default async function CalcolatorePage() {
-  const profili = await getProfiliPrezzo(true)
+  const [profili, settings] = await Promise.all([
+    getProfiliPrezzo(true),
+    getSiteSettings(),
+  ])
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-14">
@@ -20,7 +23,7 @@ export default async function CalcolatorePage() {
           Carica il file STL del tuo modello per ottenere una stima indicativa. Il file viene analizzato direttamente nel tuo browser — non viene inviato a nessun server.
         </p>
       </div>
-      <CalcolatorePublicoClient profili={profili} />
+      <CalcolatorePublicoClient profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} />
     </div>
   )
 }

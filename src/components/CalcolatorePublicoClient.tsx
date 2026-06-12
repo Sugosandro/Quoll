@@ -33,9 +33,9 @@ interface FileInfo {
   boundingBox: { x: number; y: number; z: number }
 }
 
-interface Props { profili: ProfiloPrezzo[] }
+interface Props { profili: ProfiloPrezzo[]; percentualeNegozio?: number }
 
-export default function CalcolatorePublicoClient({ profili }: Props) {
+export default function CalcolatorePublicoClient({ profili, percentualeNegozio = 0 }: Props) {
   const [file, setFile]               = useState<FileInfo | null>(null)
   const [error, setError]             = useState<string | null>(null)
   const [loading, setLoading]         = useState(false)
@@ -120,8 +120,12 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
     prezzoBase = Math.max(profilo.prezzoMinimo, totaleCosti * (1 + profilo.markupPct / 100))
   }
 
-  const prezzoMin = prezzoBase !== null ? Math.max(profilo!.prezzoMinimo, prezzoBase * 0.75) : null
-  const prezzoMax = prezzoBase !== null ? prezzoBase * 1.25 : null
+  // Applica commissione negozio: il prezzo esposto deve coprire anche la % trattenuta
+  const applyCommissione = (p: number) =>
+    percentualeNegozio > 0 ? p / (1 - percentualeNegozio / 100) : p
+
+  const prezzoMin = prezzoBase !== null ? applyCommissione(Math.max(profilo!.prezzoMinimo, prezzoBase * 0.75)) : null
+  const prezzoMax = prezzoBase !== null ? applyCommissione(prezzoBase * 1.25) : null
 
   const whatsappMsg = file && pesoBase !== null && profilo
     ? encodeURIComponent(
@@ -371,6 +375,11 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
                     {profilo?.nome} · {finituraSelezionata?.nome} · scala {scala}%{tecnologia === 'fff' ? ` · infill ${infill}%` : ''}
                   </p>
                   <p className="text-indigo-300 text-xs mt-0.5">{categoria.label} · {oreStimateMsg}</p>
+                  {percentualeNegozio > 0 && (
+                    <p className="text-indigo-300 text-xs mt-1">
+                      Commissione negozio ({percentualeNegozio}%) già inclusa nel prezzo
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
