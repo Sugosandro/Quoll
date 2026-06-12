@@ -1,10 +1,10 @@
 export interface STLResult {
   volumeMm3: number
   triangleCount: number
-  overhangRatio: number  // 0–1: frazione di superficie in sbalzo
+  overhangRatio: number
+  boundingBox: { x: number; y: number; z: number } // dimensioni in mm
 }
 
-// Soglia: normale.z < -0.5 ≈ sbalzo > 60° dall'orizzontale
 const OVERHANG_THRESHOLD = -0.5
 
 function signedVolumeOfTriangle(
@@ -36,6 +36,8 @@ function parseBinary(buffer: ArrayBuffer): STLResult {
   const view = new DataView(buffer)
   const n = view.getUint32(80, true)
   let vol = 0, totalArea = 0, overhangArea = 0
+  let minX = Infinity, minY = Infinity, minZ = Infinity
+  let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity
 
   for (let i = 0; i < n; i++) {
     const off = 84 + i * 50
@@ -46,12 +48,16 @@ function parseBinary(buffer: ArrayBuffer): STLResult {
     const { area, isOverhang } = triangleContrib(ax, ay, az, bx, by, bz, cx, cy, cz)
     totalArea += area
     if (isOverhang) overhangArea += area
+    minX = Math.min(minX, ax, bx, cx); maxX = Math.max(maxX, ax, bx, cx)
+    minY = Math.min(minY, ay, by, cy); maxY = Math.max(maxY, ay, by, cy)
+    minZ = Math.min(minZ, az, bz, cz); maxZ = Math.max(maxZ, az, bz, cz)
   }
 
   return {
     volumeMm3: Math.abs(vol),
     triangleCount: n,
     overhangRatio: totalArea > 0 ? overhangArea / totalArea : 0,
+    boundingBox: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
   }
 }
 
@@ -62,6 +68,8 @@ function parseAscii(text: string): STLResult {
   while ((m = re.exec(text)) !== null) verts.push(parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3]))
 
   let vol = 0, totalArea = 0, overhangArea = 0
+  let minX = Infinity, minY = Infinity, minZ = Infinity
+  let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity
 
   for (let i = 0; i < verts.length; i += 9) {
     const ax = verts[i], ay = verts[i + 1], az = verts[i + 2]
@@ -71,12 +79,16 @@ function parseAscii(text: string): STLResult {
     const { area, isOverhang } = triangleContrib(ax, ay, az, bx, by, bz, cx, cy, cz)
     totalArea += area
     if (isOverhang) overhangArea += area
+    minX = Math.min(minX, ax, bx, cx); maxX = Math.max(maxX, ax, bx, cx)
+    minY = Math.min(minY, ay, by, cy); maxY = Math.max(maxY, ay, by, cy)
+    minZ = Math.min(minZ, az, bz, cz); maxZ = Math.max(maxZ, az, bz, cz)
   }
 
   return {
     volumeMm3: Math.abs(vol),
     triangleCount: verts.length / 9,
     overhangRatio: totalArea > 0 ? overhangArea / totalArea : 0,
+    boundingBox: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
   }
 }
 

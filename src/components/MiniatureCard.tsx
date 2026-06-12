@@ -137,7 +137,9 @@ export default function MiniatureCard({ miniatura }: MiniatureCardProps) {
           {nome}
         </h3>
         <div className="mt-1 flex items-center justify-between">
-          {scala && <span className="text-xs text-gray-400">{scala}</span>}
+          {scala && (Array.isArray(scala) ? scala : [scala]).length > 0 && (
+            <span className="text-xs text-gray-400">{(Array.isArray(scala) ? scala : [scala]).join(' · ')}</span>
+          )}
           {prezzoMinimo !== null ? (
             <div className="flex items-baseline gap-1.5 ml-auto">
               {prezzoOriginale !== null && (

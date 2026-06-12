@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { ProfiloPrezzo } from '@/types/miniatura'
+
+type Tecnologia = 'fff' | 'resina'
 
 interface Props { profili: ProfiloPrezzo[] }
 
@@ -36,9 +38,11 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
 }
 
 export default function CalcolatoreClient({ profili }: Props) {
+  const [tecnologia, setTecnologia]       = useState<Tecnologia>('fff')
   const [peso, setPeso]                   = useState(50)
   const [costoFilamento, setCostoFil]     = useState(22)
-  const [oreStampa, setOreStampa]         = useState(4)
+  const [oreStampaManual, setOreStampaManual] = useState(4)
+  const [altezzaMm, setAltezzaMm]         = useState(40)
   const [wattaggioStampante, setWatt]     = useState(150)
   const [costoKwh, setCostoKwh]           = useState(0.25)
   const [oreLavoro, setOreLavoro]         = useState(1)
@@ -46,6 +50,11 @@ export default function CalcolatoreClient({ profili }: Props) {
   const [markup, setMarkup]               = useState(40)
   const [commissione, setCommissione]     = useState(0)
   const [profiloAttivoId, setProfiloAttivoId] = useState<string | null>(null)
+
+  const oreStampa = useMemo(() => {
+    if (tecnologia === 'resina') return (altezzaMm / 0.05) * 4 / 3600
+    return oreStampaManual
+  }, [tecnologia, altezzaMm, oreStampaManual])
 
   const profiloAttivo = profili.find(p => p._id === profiloAttivoId) ?? null
 
@@ -115,17 +124,42 @@ export default function CalcolatoreClient({ profili }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Inputs */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
-          <h2 className="font-bold text-gray-900 text-lg">Parametri stampa</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold text-gray-900 text-lg">Parametri stampa</h2>
+            <div className="flex gap-1.5">
+              {(['fff', 'resina'] as Tecnologia[]).map(t => (
+                <button key={t} onClick={() => setTecnologia(t)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    tecnologia === t
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-indigo-200'
+                  }`}>
+                  {t === 'fff' ? 'FFF' : 'Resina'}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Materiale</p>
-            <Field label="Peso filamento" value={peso} onChange={setPeso} min={1} max={1000} suffix="g" />
-            <Field label="Costo filamento" value={costoFilamento} onChange={setCostoFil} min={1} step={0.5} prefix="€" suffix="/ kg" />
+            <Field label={tecnologia === 'fff' ? 'Peso filamento' : 'Peso resina'} value={peso} onChange={setPeso} min={1} max={1000} suffix="g" />
+            <Field label={tecnologia === 'fff' ? 'Costo filamento' : 'Costo resina'} value={costoFilamento} onChange={setCostoFil} min={1} step={0.5} prefix="€" suffix="/ kg" />
           </div>
 
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Elettricità</p>
-            <Field label="Ore di stampa" value={oreStampa} onChange={setOreStampa} min={0.1} step={0.5} suffix="h" />
+            {tecnologia === 'fff' ? (
+              <Field label="Ore di stampa" hint="(dallo slicer)" value={oreStampaManual} onChange={setOreStampaManual} min={0.1} step={0.5} suffix="h" />
+            ) : (
+              <>
+                <Field label="Altezza modello" hint="(dimensione maggiore)" value={altezzaMm} onChange={setAltezzaMm} min={1} max={300} suffix="mm" />
+                <div className="flex items-center justify-between px-3 py-2 bg-indigo-50 rounded-lg">
+                  <span className="text-sm text-gray-600">Ore di stampa calcolate</span>
+                  <span className="text-sm font-bold text-indigo-700">{oreStampa.toFixed(2)} h</span>
+                </div>
+                <p className="text-xs text-gray-400">Layer 50 µm · 4 s/layer · {Math.round(altezzaMm / 0.05).toLocaleString('it')} layer totali</p>
+              </>
+            )}
             <Field label="Wattaggio stampante" value={wattaggioStampante} onChange={setWatt} min={50} max={1000} suffix="W" />
             <Field label="Costo energia" value={costoKwh} onChange={setCostoKwh} min={0.01} step={0.01} prefix="€" suffix="/ kWh" />
           </div>

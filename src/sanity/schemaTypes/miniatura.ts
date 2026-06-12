@@ -45,9 +45,11 @@ export const miniatura = defineType({
     }),
     defineField({
       name: 'scala',
-      title: 'Scala',
-      type: 'string',
-      description: 'Es. 32mm, 54mm, 1:35',
+      title: 'Scale disponibili',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: { layout: 'tags' },
+      description: 'Es. 28mm, 32mm, 54mm, 1:35 — aggiungi una scala e premi Invio',
     }),
     defineField({
       name: 'genere',

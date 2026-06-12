@@ -25,7 +25,7 @@ export interface Miniatura {
       url?: string
     }
   }
-  scala?: string
+  scala?: string | string[]
   genere?: string
   tipo?: string
   videoUrls?: string[]

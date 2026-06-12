@@ -3,6 +3,7 @@ import Image from 'next/image'
 import MiniatureCard from '@/components/MiniatureCard'
 import AnimateIn from '@/components/AnimateIn'
 import HeroCarousel from '@/components/HeroCarousel'
+import SiteBanner from '@/components/SiteBanner'
 import { urlFor } from '@/sanity/lib/image'
 import {
   getAllMiniature,
@@ -64,6 +65,11 @@ export default async function HomePage() {
         >
           <div className="max-w-6xl mx-auto px-4 pt-14 pb-20">
             <AnimateIn distance={50} scale={0.97}>
+              <div className="mb-8">
+                <SiteBanner />
+              </div>
+            </AnimateIn>
+            <AnimateIn distance={50} scale={0.97}>
               <div className="flex items-center justify-between mb-10">
                 <h2 className="text-3xl font-bold text-gray-900">Ultimi arrivi</h2>
                 <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
@@ -91,7 +97,7 @@ export default async function HomePage() {
           <div className="max-w-6xl mx-auto">
             <AnimateIn distance={40}>
               <div className="flex items-center justify-between mb-10">
-                <h2 className="text-3xl font-bold text-gray-900">⭐ Più venduti</h2>
+                <h2 className="text-3xl font-bold text-gray-900">Più venduti</h2>
                 <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
                   Vedi tutti
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +124,7 @@ export default async function HomePage() {
             <AnimateIn distance={40}>
               <div className="flex items-center justify-between mb-10">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">🔥 Offerte</h2>
+                  <h2 className="text-3xl font-bold text-gray-900">Offerte</h2>
                   <p className="text-gray-500 mt-1 text-sm">Prezzi scontati per un periodo limitato</p>
                 </div>
                 <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm">

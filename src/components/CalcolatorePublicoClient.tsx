@@ -6,6 +6,8 @@ import type { ProfiloPrezzo } from '@/types/miniatura'
 
 const SCALE = [50, 75, 100, 125, 150, 200]
 const MAX_SIZE_MB = 500
+const RESIN_LAYER_HEIGHT_MM = 0.05   // 50 micron
+const RESIN_SECONDS_PER_LAYER = 4
 
 const SUPPORTI = [
   { id: 'nessuno', label: 'Senza supporti',   overhead: 0,  desc: 'Geometria semplice, quasi nessuna superficie in sbalzo' },
@@ -14,6 +16,7 @@ const SUPPORTI = [
   { id: 'pesanti', label: 'Supporti pesanti',  overhead: 50, desc: 'Geometria complessa o parti capovolte (+50% materiale)' },
 ] as const
 type SupportiId = typeof SUPPORTI[number]['id']
+type Tecnologia = 'fff' | 'resina'
 
 function categoriaFromRatio(ratio: number): SupportiId {
   if (ratio < 0.05) return 'nessuno'
@@ -27,6 +30,7 @@ interface FileInfo {
   volumeMm3: number
   triangles: number
   overhangRatio: number
+  boundingBox: { x: number; y: number; z: number }
 }
 
 interface Props { profili: ProfiloPrezzo[] }
@@ -37,6 +41,7 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
   const [loading, setLoading]         = useState(false)
   const [dragging, setDragging]       = useState(false)
   const [supportiOverride, setSupportiOverride] = useState<SupportiId | null>(null)
+  const [tecnologia, setTecnologia]   = useState<Tecnologia>('fff')
 
   const [profiloId, setProfiloId]   = useState<string>(profili[0]?._id ?? '')
   const [finituraId, setFinituraId] = useState<string>(profili[0]?.finiture?.[0]?._id ?? '')
@@ -51,9 +56,9 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
     setLoading(true)
     try {
       const buffer = await f.arrayBuffer()
-      const { volumeMm3, triangleCount, overhangRatio } = parseSTL(buffer)
+      const { volumeMm3, triangleCount, overhangRatio, boundingBox } = parseSTL(buffer)
       if (volumeMm3 === 0) throw new Error('Volume zero — verifica che il file STL sia valido.')
-      setFile({ name: f.name, volumeMm3, triangles: triangleCount, overhangRatio })
+      setFile({ name: f.name, volumeMm3, triangles: triangleCount, overhangRatio, boundingBox })
     } catch (e: any) {
       setError(e.message ?? 'Errore nel parsing del file STL.')
     } finally {
@@ -67,12 +72,10 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
     if (f) processFile(f)
   }, [processFile])
 
-  // Supporti
   const autoCategoria: SupportiId | null = file ? categoriaFromRatio(file.overhangRatio) : null
   const categoriaId = supportiOverride ?? autoCategoria ?? 'nessuno'
   const categoria = SUPPORTI.find(s => s.id === categoriaId)!
 
-  // Calcolo
   const profilo = profili.find(p => p._id === profiloId) ?? profili[0]
   const finitureDelProfilo = profilo?.finiture ?? []
   const finituraSelezionata = finitureDelProfilo.find(f => f._id === finituraId) ?? finitureDelProfilo[0]
@@ -81,25 +84,40 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
     const prima = profilo?.finiture?.[0]
     if (prima) setFinituraId(prima._id)
   }, [profiloId])
+
   const scaleFactor = scala / 100
   const volumeCm3 = file ? (file.volumeMm3 / 1000) * Math.pow(scaleFactor, 3) : null
-  const infillFactor = 0.15 + (infill / 100) * 0.85
+
+  // Dimensione maggiore scalata (per resina)
+  const dimMaxMm = file
+    ? Math.max(file.boundingBox.x, file.boundingBox.y, file.boundingBox.z) * scaleFactor
+    : null
+
+  // Peso: FFF usa infill, resina è tendenzialmente solida
+  const infillFactor = tecnologia === 'fff' ? (0.15 + (infill / 100) * 0.85) : 1
   const pesoBase = volumeCm3 !== null && profilo ? volumeCm3 * profilo.densita * infillFactor : null
   const pesoG = pesoBase !== null ? pesoBase * (1 + categoria.overhead / 100) : null
 
-  let prezzoBase: number | null = null
+  // Ore di stampa
   let oreStampa: number | null = null
   let oreStimateMsg = ''
-
-  if (profilo && pesoG !== null && pesoBase !== null) {
+  if (tecnologia === 'fff' && profilo && pesoG !== null) {
     oreStampa = pesoG / profilo.velocitaStampaGh
+    oreStimateMsg = `${oreStampa.toFixed(1)} h di stampa stimate`
+  } else if (tecnologia === 'resina' && dimMaxMm !== null) {
+    const layers = dimMaxMm / RESIN_LAYER_HEIGHT_MM
+    oreStampa = (layers * RESIN_SECONDS_PER_LAYER) / 3600
+    oreStimateMsg = `${Math.round(dimMaxMm / RESIN_LAYER_HEIGHT_MM).toLocaleString('it')} layer · ${oreStampa.toFixed(1)} h stimate`
+  }
+
+  let prezzoBase: number | null = null
+  if (profilo && pesoG !== null && oreStampa !== null) {
     const oreLav = finituraSelezionata?.oreLavoro ?? 0
     const costoMat    = (pesoG / 1000) * profilo.costoFilamentoKg
     const costoElettr = (profilo.wattaggioW / 1000) * oreStampa * profilo.costoKwh
     const costoLav    = oreLav * profilo.costoOraLavoro
     const totaleCosti = costoMat + costoElettr + costoLav
     prezzoBase = Math.max(profilo.prezzoMinimo, totaleCosti * (1 + profilo.markupPct / 100))
-    oreStimateMsg = `${oreStampa.toFixed(1)} h di stampa stimati`
   }
 
   const prezzoMin = prezzoBase !== null ? Math.max(profilo!.prezzoMinimo, prezzoBase * 0.75) : null
@@ -107,7 +125,7 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
 
   const whatsappMsg = file && pesoBase !== null && profilo
     ? encodeURIComponent(
-        `Ciao! Ho usato il calcolatore sul sito.\n\nFile: ${file.name}\nMateriale: ${profilo.nome} — ${finituraSelezionata?.nome ?? ''}\nScala: ${scala}% · Infill: ${infill}%\nSupporti: ${categoria.label}\nPeso stimato: ${pesoG!.toFixed(1)}g\nStima prezzo: €${prezzoMin!.toFixed(2)} – €${prezzoMax!.toFixed(2)}\n\nPotete darmi un preventivo reale?`
+        `Ciao! Ho usato il calcolatore sul sito.\n\nFile: ${file.name}\nTecnologia: ${tecnologia === 'fff' ? 'FFF/Filamento' : 'Resina'}\nMateriale: ${profilo.nome} — ${finituraSelezionata?.nome ?? ''}\nScala: ${scala}%${tecnologia === 'fff' ? ` · Infill: ${infill}%` : ''}\nSupporti: ${categoria.label}\nPeso stimato: ${pesoG!.toFixed(1)}g\nStima prezzo: €${prezzoMin!.toFixed(2)} – €${prezzoMax!.toFixed(2)}\n\nPotete darmi un preventivo reale?`
       )
     : encodeURIComponent('Ciao! Vorrei un preventivo per una miniatura stampata in 3D.')
 
@@ -132,6 +150,28 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Sinistra */}
         <div className="space-y-6">
+
+          {/* Tecnologia */}
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-2">Tecnologia di stampa</p>
+            <div className="flex gap-2">
+              {([
+                { id: 'fff',    label: 'FFF / Filamento', desc: 'PLA, PETG, ABS…' },
+                { id: 'resina', label: 'Resina (MSLA)',    desc: 'Calcolo basato sull\'altezza del modello' },
+              ] as const).map(t => (
+                <button key={t.id} onClick={() => setTecnologia(t.id)}
+                  className={`flex-1 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                    tecnologia === t.id
+                      ? 'border-indigo-500 bg-indigo-50'
+                      : 'border-gray-200 bg-white hover:border-indigo-200'
+                  }`}>
+                  <p className={`text-sm font-medium ${tecnologia === t.id ? 'text-indigo-700' : 'text-gray-700'}`}>{t.label}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Upload */}
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-2">File STL del modello</p>
@@ -161,7 +201,9 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
                   </svg>
                   <div className="text-center">
                     <p className="text-sm font-semibold text-green-700">{file.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{(file.volumeMm3 / 1000).toFixed(2)} cm³ · {file.triangles.toLocaleString('it')} triangoli</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {(file.volumeMm3 / 1000).toFixed(2)} cm³ · {file.boundingBox.x.toFixed(1)}×{file.boundingBox.y.toFixed(1)}×{file.boundingBox.z.toFixed(1)} mm
+                    </p>
                     <p className="text-xs text-indigo-500 mt-1">Clicca per cambiare file</p>
                   </div>
                 </>
@@ -255,19 +297,29 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
             )}
           </div>
 
-          {/* Infill */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-gray-700">Riempimento interno (infill)</p>
-              <span className="text-sm font-bold text-indigo-600">{infill}%</span>
+          {/* Infill — solo FFF */}
+          {tecnologia === 'fff' && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-gray-700">Riempimento interno (infill)</p>
+                <span className="text-sm font-bold text-indigo-600">{infill}%</span>
+              </div>
+              <input type="range" min={10} max={100} step={5} value={infill}
+                onChange={e => setInfill(Number(e.target.value))}
+                className="w-full accent-indigo-600" />
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>10% (leggero)</span><span>50% (standard)</span><span>100% (solido)</span>
+              </div>
             </div>
-            <input type="range" min={10} max={100} step={5} value={infill}
-              onChange={e => setInfill(Number(e.target.value))}
-              className="w-full accent-indigo-600" />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>10% (leggero)</span><span>50% (standard)</span><span>100% (solido)</span>
+          )}
+
+          {/* Info resina */}
+          {tecnologia === 'resina' && (
+            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700">
+              Il tempo di stampa a resina è calcolato sulla <strong>dimensione maggiore del modello</strong> con layer da <strong>50 µm</strong> e <strong>4 s/layer</strong>.
+              La stampa a resina non ha infill — il modello è tendenzialmente solido o svuotato manualmente.
             </div>
-          </div>
+          )}
 
           {/* Scala */}
           <div>
@@ -299,8 +351,10 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
                     <p className="text-base font-bold text-gray-800">{volumeCm3!.toFixed(2)} cm³</p>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-xs text-gray-500">Peso + supporti</p>
-                    <p className="text-base font-bold text-gray-800">{pesoG!.toFixed(1)} g</p>
+                    <p className="text-xs text-gray-500">{tecnologia === 'resina' ? 'Dim. maggiore' : 'Peso + supporti'}</p>
+                    <p className="text-base font-bold text-gray-800">
+                      {tecnologia === 'resina' ? `${dimMaxMm!.toFixed(1)} mm` : `${pesoG!.toFixed(1)} g`}
+                    </p>
                     {categoria.overhead > 0 && (
                       <p className="text-xs text-orange-500 mt-0.5">+{categoria.overhead}% supporti</p>
                     )}
@@ -314,7 +368,7 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
                   <p className="text-indigo-200 text-sm mb-1">Prezzo indicativo</p>
                   <p className="text-3xl font-bold">€{prezzoMin!.toFixed(2)} – €{prezzoMax!.toFixed(2)}</p>
                   <p className="text-indigo-200 text-xs mt-2">
-                    {profilo?.nome} · {finituraSelezionata?.nome} · {infill}% infill · scala {scala}%
+                    {profilo?.nome} · {finituraSelezionata?.nome} · scala {scala}%{tecnologia === 'fff' ? ` · infill ${infill}%` : ''}
                   </p>
                   <p className="text-indigo-300 text-xs mt-0.5">{categoria.label} · {oreStimateMsg}</p>
                 </div>
@@ -322,8 +376,10 @@ export default function CalcolatorePublicoClient({ profili }: Props) {
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
                 <p className="font-semibold mb-1">Solo una stima indicativa</p>
                 <p className="leading-relaxed">
-                  I supporti sono stimati dall'analisi geometrica, ma dipendono dall'orientamento reale del pezzo nello slicer.
-                  Il prezzo finale viene concordato dopo il preventivo con slicer reale.
+                  {tecnologia === 'resina'
+                    ? "Il tempo reale dipende dall'orientamento del pezzo, dal tipo di resina e dalle impostazioni della stampante."
+                    : "I supporti sono stimati dall'analisi geometrica, ma dipendono dall'orientamento reale del pezzo nello slicer."}
+                  {' '}Il prezzo finale viene concordato dopo il preventivo con slicer reale.
                 </p>
               </div>
               <a href={`https://wa.me/393338479871?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer"

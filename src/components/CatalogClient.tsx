@@ -3,9 +3,15 @@
 import { useState, useMemo } from 'react'
 import MiniatureCard from './MiniatureCard'
 import AnimateIn from './AnimateIn'
+import SiteBanner from './SiteBanner'
 import type { MiniatureListItem } from '@/types/miniatura'
 
 const NOVITA_GIORNI = 14
+
+function toArr(scala?: string | string[]): string[] {
+  if (!scala) return []
+  return Array.isArray(scala) ? scala : [scala]
+}
 
 function isNuovo(createdAt: string) {
   return (Date.now() - new Date(createdAt).getTime()) < NOVITA_GIORNI * 86400_000
@@ -52,7 +58,7 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
     [miniature]
   )
   const scale = useMemo(
-    () => [...new Set(miniature.map((m) => m.scala).filter(Boolean) as string[])].sort(),
+    () => [...new Set(miniature.flatMap((m) => toArr(m.scala)))].sort(),
     [miniature]
   )
 
@@ -68,7 +74,7 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
     )
     if (activeGenere) result = result.filter((m) => m.genere === activeGenere)
     if (activeTipo) result = result.filter((m) => m.tipo === activeTipo)
-    if (activeScala) result = result.filter((m) => m.scala === activeScala)
+    if (activeScala) result = result.filter((m) => toArr(m.scala).includes(activeScala))
     if (soloNovita) result = result.filter((m) => isNuovo(m._createdAt))
     if (soloOfferta) result = result.filter((m) => hasValidSconto(m.varianti))
 
@@ -113,6 +119,7 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
 
   return (
     <div className="space-y-5">
+      <SiteBanner />
       {/* Search + Sort */}
       <div className="flex gap-3">
         <div className="relative flex-1">

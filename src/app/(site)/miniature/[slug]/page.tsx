@@ -50,8 +50,9 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
   const file3dUrl = file3d?.asset?._ref ? getFileUrl(file3d.asset._ref) :
                     file3d?.asset?.url ?? null
 
+  const scalaArr = !scala ? [] : Array.isArray(scala) ? scala : [scala]
   const tags = [
-    scala,
+    ...scalaArr,
     genere ? GENERI_LABEL[genere] ?? genere : null,
     tipo ? TIPI_LABEL[tipo] ?? tipo : null,
   ].filter(Boolean) as string[]
