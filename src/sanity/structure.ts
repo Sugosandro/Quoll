@@ -18,6 +18,7 @@ export const structure: StructureResolver = (S) =>
                 .child(
                   S.documentList()
                     .title('Ricevuti')
+                    .apiVersion('2023-03-25')
                     .filter('_type == "ordine" && stato == "ricevuto"')
                     .defaultOrdering([{ field: 'dataOrdine', direction: 'desc' }])
                 ),
@@ -26,6 +27,7 @@ export const structure: StructureResolver = (S) =>
                 .child(
                   S.documentList()
                     .title('In lavorazione')
+                    .apiVersion('2023-03-25')
                     .filter('_type == "ordine" && stato == "in_lavorazione"')
                     .defaultOrdering([{ field: 'dataOrdine', direction: 'desc' }])
                 ),
@@ -34,6 +36,7 @@ export const structure: StructureResolver = (S) =>
                 .child(
                   S.documentList()
                     .title('Pronti per la consegna')
+                    .apiVersion('2023-03-25')
                     .filter('_type == "ordine" && stato == "pronto"')
                     .defaultOrdering([{ field: 'dataOrdine', direction: 'desc' }])
                 ),
@@ -42,6 +45,7 @@ export const structure: StructureResolver = (S) =>
                 .child(
                   S.documentList()
                     .title('Consegnati')
+                    .apiVersion('2023-03-25')
                     .filter('_type == "ordine" && stato == "consegnato"')
                     .defaultOrdering([{ field: 'dataOrdine', direction: 'desc' }])
                 ),
