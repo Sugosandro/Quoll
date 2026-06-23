@@ -1,6 +1,7 @@
 import { getAllOrdini, getAllCosti, getSiteSettings } from '@/sanity/lib/queries'
 import StatsCard from '@/components/admin/StatsCard'
 import OrdersTable from '@/components/admin/OrdersTable'
+import LogoutButton from '@/components/admin/LogoutButton'
 import Link from 'next/link'
 
 export const revalidate = 30
@@ -31,6 +32,25 @@ export default async function AdminPage() {
     .reduce((s, o) => s + (o.prezzo ?? 0) * (percentualeNegozio / 100), 0)
 
   const guadagnoNetto = incassato - quotaNegozio
+
+  // Liquidità — basata sull'importo effettivamente ricevuto per ogni ordine
+  const pct = percentualeNegozio / 100
+  // Quota che spetta a me: vendita diretta = prezzo intero; tramite negozio = al netto della commissione
+  const dovuto = (o: (typeof ordini)[number]) =>
+    o.venditaTramiteNegozio ? (o.prezzo ?? 0) * (1 - pct) : (o.prezzo ?? 0)
+  const ricevuto = (o: (typeof ordini)[number]) => o.importoRicevuto ?? 0
+  const residuo = (o: (typeof ordini)[number]) => Math.max(0, dovuto(o) - ricevuto(o))
+
+  // Soldi effettivamente arrivati a me
+  const inTasca = ordini.reduce((s, o) => s + ricevuto(o), 0)
+  // Credito dal negozio: vendite tramite negozio dove il cliente ha pagato il negozio ma non ho ancora ricevuto tutto
+  const creditoNegozio = ordini
+    .filter((o) => o.venditaTramiteNegozio && o.clientePagato)
+    .reduce((s, o) => s + residuo(o), 0)
+  // Totale ancora da incassare: residuo su tutti gli ordini consegnati o già in fase di pagamento
+  const daIncassare = ordini
+    .filter((o) => o.stato === 'consegnato' || o.clientePagato || ricevuto(o) > 0)
+    .reduce((s, o) => s + residuo(o), 0)
 
   const attivi = ordini.filter((o) => o.stato !== 'consegnato').length
 
@@ -81,6 +101,7 @@ export default async function AdminPage() {
             <Link href="/studio" className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors">
               Studio →
             </Link>
+            <LogoutButton />
           </div>
         </div>
 
@@ -91,6 +112,14 @@ export default async function AdminPage() {
           <StatsCard label={`Quota negozio (${percentualeNegozio}%)`} value={`€${quotaNegozio.toFixed(2)}`} sub="vendite tramite negozio" color="amber" />
           <StatsCard label="Guadagno netto" value={`€${guadagnoNetto.toFixed(2)}`} sub="incassato − quota negozio" color="indigo" />
           <StatsCard label="Questo mese" value={`€${questoMese.toFixed(2)}`} sub="consegnati nel mese corrente" color="gray" />
+        </div>
+
+        {/* KPI — liquidità */}
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Liquidità</p>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <StatsCard label="Effettivamente incassato" value={`€${inTasca.toFixed(2)}`} sub="soldi già arrivati a te" color="green" />
+          <StatsCard label="Credito dal negozio" value={`€${creditoNegozio.toFixed(2)}`} sub="quote che il negozio ti deve" color="amber" />
+          <StatsCard label="Totale da incassare" value={`€${daIncassare.toFixed(2)}`} sub="residuo ancora dovuto a te" color="red" />
         </div>
 
         {/* KPI — costi & performance */}
@@ -105,7 +134,7 @@ export default async function AdminPage() {
         {/* Tabella ordini */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
           <h2 className="font-semibold text-gray-800 mb-4">Ordini</h2>
-          <OrdersTable ordini={ordini} />
+          <OrdersTable ordini={ordini} percentualeNegozio={percentualeNegozio} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

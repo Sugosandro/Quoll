@@ -8,7 +8,7 @@ const miniatureListFields = groq`
   nome,
   slug,
   bestSeller,
-  "immagini": immagini[0..2],
+  "immagini": immagini[0..4],
   scala,
   genere,
   tipo,
@@ -104,6 +104,8 @@ export interface OrdineRow {
   varianteNome?: string
   prezzo?: number
   venditaTramiteNegozio?: boolean
+  clientePagato?: boolean
+  importoRicevuto?: number
   stato: 'ricevuto' | 'in_lavorazione' | 'pronto' | 'consegnato'
   dataOrdine?: string
   note?: string
@@ -119,6 +121,8 @@ export async function getAllOrdini(): Promise<OrdineRow[]> {
       varianteNome,
       prezzo,
       venditaTramiteNegozio,
+      clientePagato,
+      importoRicevuto,
       stato,
       dataOrdine,
       note

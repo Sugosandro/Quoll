@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ADMIN_COOKIE, expectedToken } from '@/lib/adminAuth'
 
-export function proxy(request: NextRequest) {
-  // Proteggi /studio solo in produzione
-  if (process.env.NODE_ENV !== 'production') return NextResponse.next()
+/**
+ * Protegge la dashboard /admin e la API /api/ordine con un cookie di sessione.
+ * La pagina di login e la sua API restano accessibili. Lo /studio è gestito
+ * dall'autenticazione di Sanity (login Google), quindi non passa da qui.
+ */
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-  const user = process.env.STUDIO_USERNAME
-  const pass = process.env.STUDIO_PASSWORD
+  // La pagina di login è sempre accessibile
+  if (pathname === '/admin/login') return NextResponse.next()
 
-  if (!user || !pass) return NextResponse.next()
+  const expected = await expectedToken()
+  // Se nessuna password è configurata sul server, non bloccare (evita lockout)
+  if (!expected) return NextResponse.next()
 
-  const authHeader = request.headers.get('authorization')
+  const token = request.cookies.get(ADMIN_COOKIE)?.value
+  if (token && token === expected) return NextResponse.next()
 
-  if (authHeader?.startsWith('Basic ')) {
-    const decoded = atob(authHeader.slice(6))
-    const [inputUser, inputPass] = decoded.split(':')
-    if (inputUser === user && inputPass === pass) return NextResponse.next()
+  // Non autenticato
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
   }
 
-  return new NextResponse('Accesso non autorizzato', {
-    status: 401,
-    headers: { 'WWW-Authenticate': 'Basic realm="Studio"' },
-  })
+  const url = request.nextUrl.clone()
+  url.pathname = '/admin/login'
+  url.searchParams.set('from', pathname)
+  return NextResponse.redirect(url)
 }
 
 export const config = {
-  matcher: ['/studio/:path*', '/admin/:path*', '/admin'],
+  matcher: ['/admin', '/admin/:path*', '/api/ordine'],
 }

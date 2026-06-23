@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity'
+import { VarianteInput } from '../components/VarianteInput'
 
 export const ordine = defineType({
   name: 'ordine',
@@ -24,7 +25,8 @@ export const ordine = defineType({
       name: 'varianteNome',
       title: 'Variante ordinata',
       type: 'string',
-      description: 'Es. PLA grezzo, dipinta…',
+      description: 'Scegli tra le varianti della miniatura selezionata, oppure "Personalizzata" per una richiesta fuori catalogo.',
+      components: { input: VarianteInput },
     }),
     defineField({
       name: 'prezzo',
@@ -59,6 +61,20 @@ export const ordine = defineType({
       type: 'boolean',
       description: 'Attiva se l\'ordine è stato venduto tramite il negozio convenzionato',
       initialValue: false,
+    }),
+    defineField({
+      name: 'clientePagato',
+      title: '💵 Cliente ha pagato',
+      type: 'boolean',
+      description: 'Vendita tramite negozio: il cliente ha pagato il negozio. Vendita diretta: il cliente ha pagato te.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'importoRicevuto',
+      title: '💰 Importo già ricevuto (€)',
+      type: 'number',
+      description: 'Quanto hai effettivamente incassato finora per questo ordine. Aggiornalo se il pagamento arriva spezzettato. Quando raggiunge la tua quota, l\'ordine è saldato.',
+      validation: (R) => R.min(0),
     }),
     defineField({
       name: 'note',
