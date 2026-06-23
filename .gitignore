@@ -22,6 +22,7 @@
 
 # sanity studio deploy output
 /dist
+.sanity
 
 # misc
 .DS_Store
