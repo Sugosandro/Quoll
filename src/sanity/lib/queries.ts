@@ -112,7 +112,8 @@ export interface OrdineRow {
 }
 
 export async function getAllOrdini(): Promise<OrdineRow[]> {
-  return client.fetch(
+  // Dashboard: leggere sempre dati freschi (no CDN, no cache) per riflettere subito i pagamenti
+  return client.withConfig({ useCdn: false }).fetch(
     groq`*[_type == "ordine"] | order(dataOrdine desc) {
       _id,
       cliente,
@@ -128,7 +129,7 @@ export async function getAllOrdini(): Promise<OrdineRow[]> {
       note
     }`,
     {},
-    { next: { revalidate: 30 } }
+    { cache: 'no-store' }
   )
 }
 
@@ -178,10 +179,10 @@ export async function getAllFiniture(soloVisibili = false): Promise<Finitura[]> 
 }
 
 export async function getAllCosti(): Promise<Costo[]> {
-  return client.fetch(
+  return client.withConfig({ useCdn: false }).fetch(
     groq`*[_type == "costo"] | order(data desc) { _id, descrizione, categoria, importo, data, note }`,
     {},
-    { next: { revalidate: 60 } }
+    { cache: 'no-store' }
   )
 }
 

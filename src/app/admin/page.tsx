@@ -4,7 +4,7 @@ import OrdersTable from '@/components/admin/OrdersTable'
 import LogoutButton from '@/components/admin/LogoutButton'
 import Link from 'next/link'
 
-export const revalidate = 30
+export const dynamic = 'force-dynamic'
 
 const CATEGORIA_LABEL: Record<string, string> = {
   materiale: 'Materiale', attrezzatura: 'Attrezzatura', negozio: 'Negozio', altro: 'Altro',
