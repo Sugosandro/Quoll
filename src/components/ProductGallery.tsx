@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { urlFor } from '@/sanity/lib/image'
 import type { SanityImageSource } from '@sanity/image-url'
@@ -43,6 +43,31 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
   const prev = useCallback(() => setActiveIndex((i) => (i - 1 + items.length) % items.length), [items.length])
   const next = useCallback(() => setActiveIndex((i) => (i + 1) % items.length), [items.length])
 
+  // Swipe touch (mobile): scorre tra le immagini. Distingue lo swipe dal tap e
+  // ignora i gesti prevalentemente verticali (così lo scroll della pagina resta libero).
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const swiped = useRef(false)
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    swiped.current = false
+  }, [])
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStart.current) return
+    if (Math.abs(e.touches[0].clientX - touchStart.current.x) > 10) swiped.current = true
+  }, [])
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const s = touchStart.current
+    touchStart.current = null
+    if (!s) return
+    const dx = e.changedTouches[0].clientX - s.x
+    const dy = e.changedTouches[0].clientY - s.y
+    if (items.length > 1 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) next()
+      else prev()
+    }
+  }, [items.length, next, prev])
+
   useEffect(() => {
     if (!lightbox) return
     const handler = (e: KeyboardEvent) => {
@@ -66,7 +91,13 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
         {/* Main display */}
         <div
           className={`relative rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 ${isVideo ? 'aspect-video' : 'aspect-square'} ${!isVideo ? 'cursor-zoom-in' : ''}`}
-          onClick={() => !isVideo && setLightbox(true)}
+          onClick={() => {
+            if (swiped.current) { swiped.current = false; return } // era uno swipe, non aprire lo zoom
+            if (!isVideo) setLightbox(true)
+          }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
           {active?.kind === 'image' && mainImageUrl && (
             <Image
@@ -151,7 +182,10 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
           onClick={() => setLightbox(false)}
         >
           <div className="relative w-full h-full max-w-5xl max-h-screen p-4 flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}>
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}>
             <Image
               src={urlFor(active.source).width(1800).height(1800).fit('max').auto('format').url()}
               alt={`${nome} - fullscreen`}
