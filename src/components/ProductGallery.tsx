@@ -43,6 +43,12 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
   const prev = useCallback(() => setActiveIndex((i) => (i - 1 + items.length) % items.length), [items.length])
   const next = useCallback(() => setActiveIndex((i) => (i + 1) % items.length), [items.length])
 
+  // Le immagini occupano i primi indici di `items`, quindi activeIndex coincide con la
+  // posizione tra le immagini quando l'elemento attivo è un'immagine (es. nel lightbox).
+  const imageCount = imgs.length
+  const prevImage = useCallback(() => setActiveIndex((i) => (i - 1 + imageCount) % imageCount), [imageCount])
+  const nextImage = useCallback(() => setActiveIndex((i) => (i + 1) % imageCount), [imageCount])
+
   // Swipe touch (mobile): scorre tra le immagini. Distingue lo swipe dal tap e
   // ignora i gesti prevalentemente verticali (così lo scroll della pagina resta libero).
   const touchStart = useRef<{ x: number; y: number } | null>(null)
@@ -56,28 +62,31 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
     if (!touchStart.current) return
     if (Math.abs(e.touches[0].clientX - touchStart.current.x) > 10) swiped.current = true
   }, [])
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    const s = touchStart.current
-    touchStart.current = null
-    if (!s) return
-    const dx = e.changedTouches[0].clientX - s.x
-    const dy = e.changedTouches[0].clientY - s.y
-    if (items.length > 1 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-      if (dx < 0) next()
-      else prev()
-    }
-  }, [items.length, next, prev])
+  const handleSwipeEnd = useCallback(
+    (e: React.TouchEvent, goPrev: () => void, goNext: () => void) => {
+      const s = touchStart.current
+      touchStart.current = null
+      if (!s) return
+      const dx = e.changedTouches[0].clientX - s.x
+      const dy = e.changedTouches[0].clientY - s.y
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) goNext()
+        else goPrev()
+      }
+    },
+    []
+  )
 
   useEffect(() => {
     if (!lightbox) return
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightbox(false)
-      if (e.key === 'ArrowLeft') prev()
-      if (e.key === 'ArrowRight') next()
+      if (e.key === 'ArrowLeft') prevImage()
+      if (e.key === 'ArrowRight') nextImage()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [lightbox, prev, next])
+  }, [lightbox, prevImage, nextImage])
 
   if (items.length === 0) return null
 
@@ -93,7 +102,7 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
           }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
+          onTouchEnd={(e) => handleSwipeEnd(e, prev, next)}
         >
           {/* Nastro scorrevole: stessa animazione del catalogo */}
           <div
@@ -191,18 +200,29 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={() => setLightbox(false)}
         >
-          <div className="relative w-full h-full max-w-5xl max-h-screen p-4 flex items-center justify-center"
+          <div className="relative w-full h-full max-w-5xl max-h-screen overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}>
-            <Image
-              src={urlFor(active.source).width(1800).height(1800).fit('max').auto('format').url()}
-              alt={`${nome} - fullscreen`}
-              fill
-              className="object-contain"
-              sizes="100vw"
-            />
+            onTouchEnd={(e) => handleSwipeEnd(e, prevImage, nextImage)}>
+            {/* Nastro scorrevole anche a schermo intero */}
+            <div
+              className="flex h-full transition-transform duration-300 ease-out"
+              style={{ width: `${imageCount * 100}%`, transform: `translateX(-${activeIndex * (100 / imageCount)}%)` }}
+            >
+              {imgs.map((source, i) => (
+                <div key={i} className="relative h-full p-4" style={{ width: `${100 / imageCount}%` }}>
+                  <Image
+                    src={urlFor(source).width(1800).height(1800).fit('max').auto('format').url()}
+                    alt={`${nome} - fullscreen ${i + 1}`}
+                    fill
+                    className="object-contain"
+                    sizes="100vw"
+                    draggable={false}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Close */}
@@ -214,15 +234,15 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
           </button>
 
           {/* Nav arrows */}
-          {items.filter(i => i.kind === 'image').length > 1 && (
+          {imageCount > 1 && (
             <>
-              <button onClick={prev}
+              <button onClick={prevImage}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/40 rounded-full p-3 transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <button onClick={next}
+              <button onClick={nextImage}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/40 rounded-full p-3 transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
