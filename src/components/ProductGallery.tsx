@@ -81,16 +81,12 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
 
   if (items.length === 0) return null
 
-  const mainImageUrl = active?.kind === 'image'
-    ? urlFor(active.source).width(900).height(900).fit('crop').auto('format').url()
-    : null
-
   return (
     <>
       <div className="space-y-3">
         {/* Main display */}
         <div
-          className={`relative rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 ${isVideo ? 'aspect-video' : 'aspect-square'} ${!isVideo ? 'cursor-zoom-in' : ''}`}
+          className={`relative aspect-square rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 ${!isVideo ? 'cursor-zoom-in' : ''}`}
           onClick={() => {
             if (swiped.current) { swiped.current = false; return } // era uno swipe, non aprire lo zoom
             if (!isVideo) setLightbox(true)
@@ -99,23 +95,37 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          {active?.kind === 'image' && mainImageUrl && (
-            <Image
-              src={mainImageUrl}
-              alt={`${nome} - immagine ${active.index + 1}`}
-              fill priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          )}
-          {active?.kind === 'video' && (
-            <VideoEmbed
-              platform={active.platform}
-              id={active.id}
-              title={`Video ${nome}`}
-              className="absolute inset-0 w-full h-full"
-            />
-          )}
+          {/* Nastro scorrevole: stessa animazione del catalogo */}
+          <div
+            className="flex h-full transition-transform duration-300 ease-out"
+            style={{ width: `${items.length * 100}%`, transform: `translateX(-${activeIndex * (100 / items.length)}%)` }}
+          >
+            {items.map((item, i) => (
+              <div key={i} className="relative h-full" style={{ width: `${100 / items.length}%` }}>
+                {item.kind === 'image' ? (
+                  <Image
+                    src={urlFor(item.source).width(900).height(900).fit('crop').auto('format').url()}
+                    alt={`${nome} - immagine ${item.index + 1}`}
+                    fill
+                    priority={i === 0}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black">
+                    <VideoEmbed
+                      platform={item.platform}
+                      id={item.id}
+                      title={`Video ${nome}`}
+                      className="relative w-full aspect-video"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
           {!isVideo && (
             <div className="absolute bottom-2 right-2 bg-black/40 text-white rounded-lg p-1.5 pointer-events-none">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
