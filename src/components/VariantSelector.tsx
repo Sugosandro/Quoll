@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import type { Variante } from '@/types/miniatura'
 
-const WHATSAPP_NUMBER = '393338479871'
-
 interface VariantSelectorProps {
   varianti: Variante[]
   nomeMiniatura: string
@@ -34,7 +32,7 @@ export default function VariantSelector({ varianti, nomeMiniatura }: VariantSele
   const whatsappText = encodeURIComponent(
     `Ciao! Sono interessato alla miniatura "${nomeMiniatura}"${selected ? ` - variante: ${selected.nome}` : ''}. Potete darmi più informazioni?`
   )
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappText}`
+  const whatsappUrl = `/vai/whatsapp?text=${whatsappText}`
 
   const scontoValido = selected ? isValidSconto(selected) : false
 

@@ -237,7 +237,7 @@ export default async function HomePage() {
           <h2 className="text-2xl font-bold text-white">Hai in mente qualcosa di specifico?</h2>
           <p className="mt-2 text-indigo-200">Posso stampare miniature personalizzate su richiesta. Scrivimi!</p>
           <a
-            href="https://wa.me/393338479871"
+            href="/vai/whatsapp"
             target="_blank" rel="noopener noreferrer"
             className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-indigo-700 font-semibold hover:bg-indigo-50 transition-colors"
           >

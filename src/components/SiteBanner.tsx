@@ -10,7 +10,7 @@ export default function SiteBanner() {
         </div>
       </div>
       <a
-        href="https://wa.me/393338479871?text=Ciao! Vorrei informazioni sui prodotti disponibili."
+        href="/vai/whatsapp?text=Ciao!%20Vorrei%20informazioni%20sui%20prodotti%20disponibili."
         target="_blank"
         rel="noopener noreferrer"
         className="flex-none inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors shadow-sm whitespace-nowrap"

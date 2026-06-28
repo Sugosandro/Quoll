@@ -104,7 +104,7 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
             <VariantSelector varianti={varianti} nomeMiniatura={nome} />
           ) : (
             <a
-              href={`https://wa.me/393338479871?text=${encodeURIComponent(`Ciao! Sono interessato alla miniatura "${nome}". Potete darmi più informazioni?`)}`}
+              href={`/vai/whatsapp?text=${encodeURIComponent(`Ciao! Sono interessato alla miniatura "${nome}". Potete darmi più informazioni?`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-base transition-colors shadow-sm"

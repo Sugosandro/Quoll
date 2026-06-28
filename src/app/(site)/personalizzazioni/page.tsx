@@ -55,7 +55,7 @@ export default function PersonalizzazioniPage() {
         <div className="text-center">
           <p className="text-gray-500 mb-4">Nessun impegno — scrivimi e vediamo cosa si può fare.</p>
           <a
-            href="https://wa.me/393338479871?text=Ciao! Vorrei richiedere una miniatura personalizzata."
+            href="/vai/whatsapp?text=Ciao!%20Vorrei%20richiedere%20una%20miniatura%20personalizzata."
             target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-base transition-colors shadow-sm"
           >

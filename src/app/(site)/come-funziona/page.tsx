@@ -95,7 +95,7 @@ export default function ComeFunzionaPage() {
               className="px-6 py-3 rounded-xl bg-white text-indigo-700 font-semibold hover:bg-indigo-50 transition-colors">
               Vai al catalogo
             </Link>
-            <a href="https://wa.me/393338479871" target="_blank" rel="noopener noreferrer"
+            <a href="/vai/whatsapp" target="_blank" rel="noopener noreferrer"
               className="px-6 py-3 rounded-xl bg-indigo-500 text-white font-semibold hover:bg-indigo-400 transition-colors">
               Scrivimi su WhatsApp
             </a>

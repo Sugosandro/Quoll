@@ -23,7 +23,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
 
       {/* Floating WhatsApp */}
       <a
-        href="https://wa.me/393338479871"
+        href="/vai/whatsapp"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Contattami su WhatsApp"

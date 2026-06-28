@@ -143,7 +143,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
             className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white font-semibold text-base transition-colors backdrop-blur">
             Calcola il prezzo
           </Link>
-          <a href="https://wa.me/393338479871" target="_blank" rel="noopener noreferrer"
+          <a href="/vai/whatsapp" target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white font-semibold text-base transition-colors backdrop-blur">
             Richiedi un preventivo
           </a>
