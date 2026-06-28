@@ -123,12 +123,25 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-black">
-                    <VideoEmbed
-                      platform={item.platform}
-                      id={item.id}
-                      title={`Video ${nome}`}
-                      className="relative w-full aspect-video"
-                    />
+                    {i === activeIndex ? (
+                      // Solo il video attivo viene caricato e parte in auto-loop pulito (muto, senza controlli/chrome)
+                      <VideoEmbed
+                        background
+                        platform={item.platform}
+                        id={item.id}
+                        title={`Video ${nome}`}
+                        className="relative w-full aspect-video"
+                      />
+                    ) : item.platform === 'youtube' ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={`https://img.youtube.com/vi/${item.id}/hqdefault.jpg`}
+                        alt={`Video ${nome}`}
+                        className="w-full aspect-video object-cover opacity-80"
+                      />
+                    ) : (
+                      <div className="w-full aspect-video bg-gray-900" />
+                    )}
                   </div>
                 )}
               </div>
