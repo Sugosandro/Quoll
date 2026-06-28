@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Cinzel } from 'next/font/google'
 import './globals.css'
+import { Analytics } from '@vercel/analytics/next'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist' })
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col bg-white text-gray-900">
         <GoogleAnalytics />
         {children}
+        <Analytics />
       </body>
     </html>
   )
