@@ -51,8 +51,8 @@ export default async function HomePage() {
         </section>
       </div>
 
-      {/* Card "Ultimi arrivi" — scorre sopra l'hero */}
-      {featured.length > 0 && (
+      {/* Offerte — scorre sopra l'hero */}
+      {offerte.length > 0 && (
         <section
           className="bg-white"
           style={{
@@ -71,9 +71,12 @@ export default async function HomePage() {
             </AnimateIn>
             <AnimateIn distance={50} scale={0.97}>
               <div className="flex items-center justify-between mb-10">
-                <h2 className="text-3xl font-bold text-gray-900">Ultimi arrivi</h2>
-                <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
-                  Vedi tutti
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">Offerte</h2>
+                  <p className="text-gray-500 mt-1 text-sm">Prezzi scontati per un periodo limitato</p>
+                </div>
+                <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm">
+                  Vedi tutte
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -81,7 +84,7 @@ export default async function HomePage() {
               </div>
             </AnimateIn>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {featured.map((m, i) => (
+              {offerte.map((m, i) => (
                 <AnimateIn key={m._id} delay={80 + i * 90} distance={60} scale={0.95}>
                   <MiniatureCard miniatura={m} />
                 </AnimateIn>
@@ -117,18 +120,15 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Offerte */}
-      {offerte.length > 0 && (
+      {/* Ultimi arrivi */}
+      {featured.length > 0 && (
         <section className="bg-white py-16 px-4" style={{ position: 'relative', zIndex: 10 }}>
           <div className="max-w-6xl mx-auto">
             <AnimateIn distance={40}>
               <div className="flex items-center justify-between mb-10">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Offerte</h2>
-                  <p className="text-gray-500 mt-1 text-sm">Prezzi scontati per un periodo limitato</p>
-                </div>
-                <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm">
-                  Vedi tutte
+                <h2 className="text-3xl font-bold text-gray-900">Ultimi arrivi</h2>
+                <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
+                  Vedi tutti
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -136,7 +136,7 @@ export default async function HomePage() {
               </div>
             </AnimateIn>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {offerte.map((m, i) => (
+              {featured.map((m, i) => (
                 <AnimateIn key={m._id} delay={i * 80} distance={50} scale={0.96}>
                   <MiniatureCard miniatura={m} />
                 </AnimateIn>
