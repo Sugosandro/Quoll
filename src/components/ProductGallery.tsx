@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { urlFor } from '@/sanity/lib/image'
 import type { SanityImageSource } from '@sanity/image-url'
@@ -122,7 +123,10 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
                     draggable={false}
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black">
+                  <div className="absolute inset-0 bg-black">
+                    {/* Il riquadro riempie l'intero box quadrato (niente più aspect-video
+                        annidato): un video verticale (es. girato da iPhone) veniva
+                        "letterboxato" due volte e appariva minuscolo al centro. */}
                     {i === activeIndex ? (
                       // Solo il video attivo viene caricato e parte in auto-loop pulito (muto, senza controlli/chrome)
                       <VideoEmbed
@@ -130,17 +134,17 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
                         platform={item.platform}
                         id={item.id}
                         title={`Video ${nome}`}
-                        className="relative w-full aspect-video"
+                        className="absolute inset-0 w-full h-full"
                       />
                     ) : item.platform === 'youtube' ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={`https://img.youtube.com/vi/${item.id}/hqdefault.jpg`}
                         alt={`Video ${nome}`}
-                        className="w-full aspect-video object-cover opacity-80"
+                        className="absolute inset-0 w-full h-full object-cover opacity-80"
                       />
                     ) : (
-                      <div className="w-full aspect-video bg-gray-900" />
+                      <div className="absolute inset-0 bg-gray-900" />
                     )}
                   </div>
                 )}
@@ -207,8 +211,10 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
         )}
       </div>
 
-      {/* Lightbox */}
-      {lightbox && active?.kind === 'image' && (
+      {/* Lightbox — renderizzata via portal su document.body: un antenato con un
+          transform residuo (es. l'animazione di pagina) rompe il posizionamento
+          "fixed" e su mobile la lightbox appariva completamente nera e fuori schermo. */}
+      {lightbox && active?.kind === 'image' && typeof document !== 'undefined' && createPortal(
         <div
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={() => setLightbox(false)}
@@ -263,7 +269,8 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
               </button>
             </>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
