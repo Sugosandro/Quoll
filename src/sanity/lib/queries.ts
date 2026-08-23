@@ -1,6 +1,10 @@
 import { groq } from 'next-sanity'
 import { client } from './client'
 import type { Miniatura, MiniatureListItem, Creator, SiteSettings, Costo, ProfiloPrezzo, Finitura } from '@/types/miniatura'
+import type { Negozio, VenditaSegnalata, MovimentoGiacenza } from '@/types/negozio'
+
+/** Riferimento leggero a una miniatura con quanto serve per un link + thumbnail nelle pagine negozio/admin. */
+const miniaturaRefFields = groq`_id, nome, slug, "immagine": immagini[0]`
 
 const miniatureListFields = groq`
   _id,
@@ -51,6 +55,7 @@ export async function getMiniatura(slug: string): Promise<Miniatura | null> {
       scala,
       genere,
       tipo,
+      videoFiles[] { asset->{ _ref, url, mimeType } },
       videoUrls,
       varianti[] { _key, nome, materiale, prezzo, prezzoScontato, scadenzaSconto, disponibilita, quantita }
     }`,
@@ -104,6 +109,8 @@ export interface OrdineRow {
   varianteNome?: string
   prezzo?: number
   venditaTramiteNegozio?: boolean
+  negozioId?: string
+  negozioNome?: string
   clientePagato?: boolean
   importoRicevuto?: number
   stato: 'ricevuto' | 'in_lavorazione' | 'pronto' | 'consegnato'
@@ -122,6 +129,8 @@ export async function getAllOrdini(): Promise<OrdineRow[]> {
       varianteNome,
       prezzo,
       venditaTramiteNegozio,
+      "negozioId": negozio->_id,
+      "negozioNome": negozio->nome,
       clientePagato,
       importoRicevuto,
       stato,
@@ -129,6 +138,101 @@ export async function getAllOrdini(): Promise<OrdineRow[]> {
       note
     }`,
     {},
+    { cache: 'no-store' }
+  )
+}
+
+/** Negozio (senza giacenze: la giacenza attuale si calcola dai movimenti, vedi getMovimentiPerNegozio). Non seleziona mai passwordHash. */
+export async function getNegozioBySlug(slug: string): Promise<Negozio | null> {
+  return client.withConfig({ useCdn: false }).fetch(
+    groq`*[_type == "negozio" && slug.current == $slug][0] {
+      _id, nome, slug, indirizzo, percentualeNegozio, attivo
+    }`,
+    { slug },
+    { cache: 'no-store' }
+  )
+}
+
+export async function getAllNegozi(): Promise<Negozio[]> {
+  return client.withConfig({ useCdn: false }).fetch(
+    groq`*[_type == "negozio"] | order(nome asc) {
+      _id, nome, slug, indirizzo, percentualeNegozio, attivo
+    }`,
+    {},
+    { cache: 'no-store' }
+  )
+}
+
+/** Movimenti di giacenza di un negozio (consegne/ritiri/vendite), più recenti prima. */
+export async function getMovimentiPerNegozio(negozioId: string): Promise<MovimentoGiacenza[]> {
+  return client.withConfig({ useCdn: false }).fetch(
+    groq`*[_type == "movimentoGiacenza" && negozio._ref == $negozioId] | order(data desc) {
+      _id, "miniatura": miniatura->{ ${miniaturaRefFields} }, varianteNome, quantita, motivo, data, note
+    }`,
+    { negozioId },
+    { cache: 'no-store' }
+  )
+}
+
+export async function getVenditeSegnalate(soloDaRevisionare = false): Promise<VenditaSegnalata[]> {
+  const filter = soloDaRevisionare
+    ? '*[_type == "venditaSegnalata" && stato == "segnalata"]'
+    : '*[_type == "venditaSegnalata"]'
+  return client.withConfig({ useCdn: false }).fetch(
+    groq`${filter} | order(data desc) {
+      _id,
+      "negozio": negozio->{ _id, nome },
+      "miniatura": miniatura->{ ${miniaturaRefFields} },
+      varianteNome,
+      quantita,
+      prezzoListino,
+      prezzoStimato,
+      offertaUsata,
+      scontoExtra,
+      data,
+      note,
+      stato,
+      ordineCollegato
+    }`,
+    {},
+    { cache: 'no-store' }
+  )
+}
+
+export interface OrdineNegozioRow {
+  _id: string
+  prezzo?: number
+  clientePagato?: boolean
+  importoRicevuto?: number
+}
+
+/** Ordini ufficiali collegati a un negozio, per calcolare il credito che ti deve. */
+export async function getOrdiniPerNegozio(negozioId: string): Promise<OrdineNegozioRow[]> {
+  return client.withConfig({ useCdn: false }).fetch(
+    groq`*[_type == "ordine" && negozio._ref == $negozioId] {
+      _id, prezzo, clientePagato, importoRicevuto
+    }`,
+    { negozioId },
+    { cache: 'no-store' }
+  )
+}
+
+export async function getVenditeSegnalatePerNegozio(negozioId: string): Promise<VenditaSegnalata[]> {
+  return client.withConfig({ useCdn: false }).fetch(
+    groq`*[_type == "venditaSegnalata" && negozio._ref == $negozioId] | order(data desc) {
+      _id,
+      "miniatura": miniatura->{ ${miniaturaRefFields} },
+      varianteNome,
+      quantita,
+      prezzoListino,
+      prezzoStimato,
+      offertaUsata,
+      scontoExtra,
+      data,
+      note,
+      stato
+    }`,
+    { negozioId },
     { cache: 'no-store' }
   )
 }

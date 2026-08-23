@@ -59,6 +59,19 @@ export const structure: StructureResolver = (S) =>
       S.documentTypeListItem('finitura').title('🎨 Finiture'),
       S.divider(),
       S.listItem()
+        .id('negozi')
+        .title('🏪 Negozi')
+        .child(
+          S.list()
+            .title('Negozi')
+            .items([
+              S.documentTypeListItem('negozio').title('Negozi'),
+              S.documentTypeListItem('venditaSegnalata').title('Vendite segnalate'),
+              S.documentTypeListItem('movimentoGiacenza').title('Movimenti giacenza'),
+            ])
+        ),
+      S.divider(),
+      S.listItem()
         .title('⚙️ Impostazioni sito')
         .child(
           S.document()

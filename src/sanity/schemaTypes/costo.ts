@@ -44,16 +44,24 @@ export const costo = defineType({
       type: 'text',
       rows: 2,
     }),
+    defineField({
+      name: 'immagine',
+      title: 'Immagine',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'Es. foto dello scontrino/fattura, opzionale',
+    }),
   ],
   preview: {
-    select: { title: 'descrizione', subtitle: 'importo', cat: 'categoria' },
-    prepare({ title, subtitle, cat }) {
+    select: { title: 'descrizione', subtitle: 'importo', cat: 'categoria', media: 'immagine' },
+    prepare({ title, subtitle, cat, media }) {
       const icons: Record<string, string> = {
         materiale: '🧱', attrezzatura: '🔧', negozio: '🏪', altro: '📌',
       }
       return {
         title: `${icons[cat] ?? '📌'} ${title}`,
         subtitle: subtitle != null ? `€${subtitle}` : '',
+        media,
       }
     },
   },

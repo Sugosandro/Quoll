@@ -47,7 +47,7 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
   const [activeScala, setScala] = useState<string | null>(null)
   const [soloNovita, setSoloNovita] = useState(false)
   const [soloOfferta, setSoloOfferta] = useState(false)
-  const [sort, setSort] = useState<SortKey>('recenti')
+  const [sort, setSort] = useState<SortKey>('prezzo-desc')
 
   const generi = useMemo(
     () => [...new Set(miniature.map((m) => m.genere).filter(Boolean) as string[])].sort(),

@@ -18,28 +18,43 @@ function parseVideo(url: string): { platform: 'youtube' | 'vimeo'; id: string } 
 type GalleryItem =
   | { kind: 'image'; source: SanityImageSource; index: number }
   | { kind: 'video'; url: string; platform: 'youtube' | 'vimeo'; id: string }
+  | { kind: 'videoFile'; url: string; mimeType?: string }
 
 interface ProductGalleryProps {
   immagini: SanityImageSource[]
   nome: string
+  videoFiles?: { asset?: { url?: string; mimeType?: string } }[]
   videoUrls?: string[]
 }
 
-export default function ProductGallery({ immagini, nome, videoUrls }: ProductGalleryProps) {
+export default function ProductGallery({ immagini, nome, videoFiles, videoUrls }: ProductGalleryProps) {
   const imgs = immagini ?? []
   const vids = videoUrls ?? []
+
+  // I video caricati (self-hosted su Sanity) vengono prima: niente loghi/UI di
+  // YouTube e caricamento più veloce dalla CDN. I link esterni restano per
+  // compatibilità con i video già inseriti prima di questa funzione.
+  const fileVids: GalleryItem[] = (videoFiles ?? [])
+    .map((v): GalleryItem | null =>
+      v.asset?.url ? { kind: 'videoFile', url: v.asset.url, mimeType: v.asset.mimeType } : null
+    )
+    .filter((x): x is GalleryItem => x !== null)
+
+  const urlVids: GalleryItem[] = vids
+    .map((url) => { const p = parseVideo(url); return p ? { kind: 'video' as const, url, ...p } : null })
+    .filter((x): x is GalleryItem & { kind: 'video' } => x !== null)
+
   const items: GalleryItem[] = [
     ...imgs.map((source, index) => ({ kind: 'image' as const, source, index })),
-    ...vids
-      .map((url) => { const p = parseVideo(url); return p ? { kind: 'video' as const, url, ...p } : null })
-      .filter((x): x is GalleryItem & { kind: 'video' } => x !== null),
+    ...fileVids,
+    ...urlVids,
   ]
 
   const [activeIndex, setActiveIndex] = useState(0)
   const [lightbox, setLightbox] = useState(false)
 
   const active = items[activeIndex]
-  const isVideo = active?.kind === 'video'
+  const isVideo = active?.kind === 'video' || active?.kind === 'videoFile'
 
   const prev = useCallback(() => setActiveIndex((i) => (i - 1 + items.length) % items.length), [items.length])
   const next = useCallback(() => setActiveIndex((i) => (i + 1) % items.length), [items.length])
@@ -128,13 +143,36 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
                         annidato): un video verticale (es. girato da iPhone) veniva
                         "letterboxato" due volte e appariva minuscolo al centro. */}
                     {i === activeIndex ? (
-                      // Solo il video attivo viene caricato e parte in auto-loop pulito (muto, senza controlli/chrome)
-                      <VideoEmbed
-                        background
-                        platform={item.platform}
-                        id={item.id}
-                        title={`Video ${nome}`}
-                        className="absolute inset-0 w-full h-full"
+                      item.kind === 'videoFile' ? (
+                        // Video caricato su Sanity: tag <video> nativo, servito dalla CDN, niente iframe/loghi esterni.
+                        // Controlli nativi (play/pausa/seek) attivi, ma parte muto e resta muto di default.
+                        <video
+                          src={item.url}
+                          className="absolute inset-0 w-full h-full object-contain"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          controls
+                        />
+                      ) : (
+                        // Solo il video attivo viene caricato e parte in auto-loop pulito (muto, senza controlli/chrome)
+                        <VideoEmbed
+                          background
+                          platform={item.platform}
+                          id={item.id}
+                          title={`Video ${nome}`}
+                          className="absolute inset-0 w-full h-full"
+                        />
+                      )
+                    ) : item.kind === 'videoFile' ? (
+                      // "#t=0.1" fa mostrare il primo fotogramma come anteprima statica, senza autoplay
+                      <video
+                        src={`${item.url}#t=0.1`}
+                        className="absolute inset-0 w-full h-full object-cover opacity-80"
+                        muted
+                        playsInline
+                        preload="metadata"
                       />
                     ) : item.platform === 'youtube' ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -192,6 +230,13 @@ export default function ProductGallery({ immagini, nome, videoUrls }: ProductGal
                 {item.kind === 'image' ? (
                   <Image src={urlFor(item.source).width(160).height(160).fit('crop').auto('format').url()}
                     alt={`${nome} thumbnail ${i + 1}`} fill sizes="64px" className="object-cover" />
+                ) : item.kind === 'videoFile' ? (
+                  <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+                    <video src={`${item.url}#t=0.1`} className="absolute inset-0 w-full h-full object-cover opacity-70" muted playsInline preload="metadata" />
+                    <svg className="relative z-10 w-6 h-6 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
                 ) : (
                   <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
                     {item.platform === 'youtube' && (

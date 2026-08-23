@@ -95,6 +95,9 @@ export default async function AdminPage() {
             <p className="text-sm text-gray-400 mt-0.5">{ordini.length} ordini totali</p>
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/admin/negozi" className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors">
+              Negozi →
+            </Link>
             <Link href="/admin/calcolatore" className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors">
               Calcolatore costi →
             </Link>

@@ -28,6 +28,7 @@ export interface Miniatura {
   scala?: string | string[]
   genere?: string
   tipo?: string
+  videoFiles?: { asset?: { _ref: string; url?: string; mimeType?: string } }[]
   videoUrls?: string[]
   varianti?: Variante[]
 }

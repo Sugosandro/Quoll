@@ -33,16 +33,24 @@ export const finitura = defineType({
       type: 'boolean',
       initialValue: true,
     }),
+    defineField({
+      name: 'immagine',
+      title: 'Immagine',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'Foto di esempio di questa finitura, opzionale',
+    }),
   ],
   orderings: [
     { name: 'ordine', title: 'Ordine', by: [{ field: 'ordine', direction: 'asc' }] },
   ],
   preview: {
-    select: { title: 'nome', ore: 'oreLavoro', visibile: 'visibileAlPubblico' },
-    prepare({ title, ore, visibile }) {
+    select: { title: 'nome', ore: 'oreLavoro', visibile: 'visibileAlPubblico', media: 'immagine' },
+    prepare({ title, ore, visibile, media }) {
       return {
         title,
         subtitle: `${ore}h lavoro${visibile === false ? ' · solo admin' : ''}`,
+        media,
       }
     },
   },

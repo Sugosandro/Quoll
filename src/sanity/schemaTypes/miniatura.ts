@@ -64,11 +64,19 @@ export const miniatura = defineType({
       description: 'Es. Personaggio, Veicolo, Edificio, Animale, Accessorio — scrivi liberamente',
     }),
     defineField({
+      name: 'videoFiles',
+      title: 'Video (caricati)',
+      type: 'array',
+      of: [{ type: 'file', options: { accept: 'video/*' } }],
+      description:
+        'Consigliato: carica qui i video (mp4, H.264) per servirli direttamente dal sito, senza loghi/UI di YouTube e con caricamento più veloce.',
+    }),
+    defineField({
       name: 'videoUrls',
-      title: 'Video (YouTube / Vimeo)',
+      title: 'Video (YouTube / Vimeo) — legacy',
       type: 'array',
       of: [{ type: 'url' }],
-      description: 'Incolla link YouTube o Vimeo — es. https://youtube.com/watch?v=...',
+      description: 'Solo se preferisci un link esterno invece di caricare il file. Incolla link YouTube o Vimeo.',
     }),
     defineField({
       name: 'varianti',

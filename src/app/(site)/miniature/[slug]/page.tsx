@@ -7,7 +7,8 @@ import MiniatureCard from '@/components/MiniatureCard'
 import AnimateIn from '@/components/AnimateIn'
 import RichText from '@/components/RichText'
 import { getMiniatura, getAllSlugs, getRelated } from '@/sanity/lib/queries'
-import { getFileUrl } from '@/sanity/lib/image'
+import { getFileUrl, urlFor } from '@/sanity/lib/image'
+import { SITE_URL } from '@/lib/siteUrl'
 
 export const revalidate = 60
 
@@ -43,7 +44,7 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
 
   if (!miniatura) notFound()
 
-  const { nome, descrizione, immagini, file3d, scala, genere, tipo, videoUrls, varianti } = miniatura
+  const { nome, descrizione, immagini, file3d, scala, genere, tipo, videoFiles, videoUrls, varianti } = miniatura
 
   const correlati = await getRelated(slug, genere, tipo)
 
@@ -57,8 +58,58 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
     tipo ? TIPI_LABEL[tipo] ?? tipo : null,
   ].filter(Boolean) as string[]
 
+  // Dati strutturati Product (schema.org) — permette a Google di mostrare
+  // prezzo e disponibilità direttamente nei risultati di ricerca.
+  const oraAttuale = new Date()
+  const prezziAttivi = (varianti ?? [])
+    .map((v) =>
+      v.prezzoScontato != null && (!v.scadenzaSconto || new Date(v.scadenzaSconto) > oraAttuale)
+        ? v.prezzoScontato
+        : v.prezzo
+    )
+    .filter((p): p is number => p != null)
+  const minPrezzo = prezziAttivi.length ? Math.min(...prezziAttivi) : undefined
+  const maxPrezzo = prezziAttivi.length ? Math.max(...prezziAttivi) : undefined
+  const disponibile = (varianti ?? []).some((v) => v.disponibilita !== 'esaurito')
+  const pageUrl = `${SITE_URL}/miniature/${slug}`
+
+  const productJsonLd =
+    minPrezzo != null
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: nome,
+          image: (immagini ?? []).slice(0, 4).map((img) => urlFor(img).width(1200).height(1200).fit('crop').auto('format').url()),
+          description: `Miniatura stampata in 3D: ${nome}`,
+          url: pageUrl,
+          offers:
+            maxPrezzo != null && maxPrezzo !== minPrezzo
+              ? {
+                  '@type': 'AggregateOffer',
+                  priceCurrency: 'EUR',
+                  lowPrice: minPrezzo,
+                  highPrice: maxPrezzo,
+                  offerCount: prezziAttivi.length,
+                  availability: disponibile ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                }
+              : {
+                  '@type': 'Offer',
+                  priceCurrency: 'EUR',
+                  price: minPrezzo,
+                  availability: disponibile ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                  url: pageUrl,
+                },
+        }
+      : null
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
+      {productJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, '\\u003c') }}
+        />
+      )}
       {/* Back link */}
       <a href="/catalogo" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 mb-8 transition-colors shadow-sm">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +121,7 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
         {/* Left: gallery + 3D viewer */}
         <div className="space-y-6">
-          <ProductGallery immagini={immagini} nome={nome} videoUrls={videoUrls} />
+          <ProductGallery immagini={immagini} nome={nome} videoFiles={videoFiles} videoUrls={videoUrls} />
 
           {file3dUrl && (
             <div>

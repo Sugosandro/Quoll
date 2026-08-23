@@ -59,8 +59,16 @@ export const ordine = defineType({
       name: 'venditaTramiteNegozio',
       title: 'Venduto tramite negozio',
       type: 'boolean',
-      description: 'Attiva se l\'ordine è stato venduto tramite il negozio convenzionato',
+      description: 'Attiva se l\'ordine è stato venduto tramite un negozio convenzionato',
       initialValue: false,
+    }),
+    defineField({
+      name: 'negozio',
+      title: 'Negozio',
+      type: 'reference',
+      to: [{ type: 'negozio' }],
+      description: 'A quale negozio è collegata questa vendita',
+      hidden: ({ parent }) => !parent?.venditaTramiteNegozio,
     }),
     defineField({
       name: 'clientePagato',
@@ -89,14 +97,18 @@ export const ordine = defineType({
       miniatura: 'miniatura.nome',
       stato: 'stato',
       prezzo: 'prezzo',
+      // Nessuna immagine propria sull'ordine: prende in automatico la prima
+      // foto della miniatura collegata, seguendo il riferimento.
+      media: 'miniatura.immagini.0',
     },
-    prepare({ nome, miniatura, stato, prezzo }) {
+    prepare({ nome, miniatura, stato, prezzo, media }) {
       const icone: Record<string, string> = {
         ricevuto: '📥', in_lavorazione: '⚙️', pronto: '✅', consegnato: '📦',
       }
       return {
         title: `${icone[stato] ?? ''} ${nome ?? 'Cliente sconosciuto'}`,
         subtitle: [miniatura, prezzo != null ? `€${prezzo}` : null].filter(Boolean).join(' · '),
+        media,
       }
     },
   },

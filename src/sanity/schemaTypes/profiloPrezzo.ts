@@ -35,6 +35,14 @@ export const profiloPrezzo = defineType({
       group: 'materiale',
     }),
     defineField({
+      name: 'immagine',
+      title: 'Immagine',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'Foto di riferimento del materiale/campione, opzionale',
+      group: 'materiale',
+    }),
+    defineField({
       name: 'densita',
       title: 'Densità (g/cm³)',
       type: 'number',
@@ -121,11 +129,12 @@ export const profiloPrezzo = defineType({
     }),
   ],
   preview: {
-    select: { title: 'nome', mat: 'materiale', pub: 'visibileAlPubblico' },
-    prepare({ title, mat, pub }) {
+    select: { title: 'nome', mat: 'materiale', pub: 'visibileAlPubblico', media: 'immagine' },
+    prepare({ title, mat, pub, media }) {
       return {
         title,
         subtitle: [mat, pub === false ? '(solo admin)' : null].filter(Boolean).join(' · '),
+        media,
       }
     },
   },
