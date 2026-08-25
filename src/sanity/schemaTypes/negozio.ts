@@ -14,9 +14,10 @@ export const negozio = defineType({
     }),
     defineField({
       name: 'slug',
-      title: 'Slug (link del portale)',
+      title: 'Slug (link del portale e della pagina pubblica)',
       type: 'slug',
-      description: 'Determina il link del portale: sito.it/negozio/questo-slug',
+      description:
+        'Determina sia il link privato del portale (sito.it/negozio/questo-slug) sia, se reso pubblico, quello della pagina vetrina (sito.it/negozi/questo-slug)',
       options: { source: 'nome', maxLength: 96 },
       validation: (R) => R.required(),
     }),
@@ -43,10 +44,18 @@ export const negozio = defineType({
     }),
     defineField({
       name: 'attivo',
-      title: 'Accesso attivo',
+      title: 'Accesso al portale attivo',
       type: 'boolean',
       initialValue: true,
       description: 'Disattiva per bloccare il login del negozio senza cancellarlo',
+    }),
+    defineField({
+      name: 'visibilePubblicamente',
+      title: 'Visibile sul sito pubblico',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'Attiva per far comparire questo negozio in home e su /negozi, con la sua pagina vetrina pubblica. Indipendente dall\'accesso al portale: puoi attivare il portale prima di renderlo pubblico (es. durante l\'avvio).',
     }),
     defineField({
       name: 'immagine',
@@ -57,9 +66,10 @@ export const negozio = defineType({
     }),
   ],
   preview: {
-    select: { title: 'nome', subtitle: 'indirizzo', attivo: 'attivo', media: 'immagine' },
-    prepare({ title, subtitle, attivo, media }) {
-      return { title: `${attivo === false ? '🔒 ' : ''}${title ?? 'Negozio'}`, subtitle, media }
+    select: { title: 'nome', subtitle: 'indirizzo', attivo: 'attivo', pubblico: 'visibilePubblicamente', media: 'immagine' },
+    prepare({ title, subtitle, attivo, pubblico, media }) {
+      const badge = `${attivo === false ? '🔒 ' : ''}${pubblico ? '🌐 ' : ''}`
+      return { title: `${badge}${title ?? 'Negozio'}`, subtitle, media }
     },
   },
 })

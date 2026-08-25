@@ -11,6 +11,7 @@ import {
   getMiniatureInOfferta,
   getCreators,
   getSiteSettings,
+  getNegoziPubblici,
 } from '@/sanity/lib/queries'
 
 export const revalidate = 60
@@ -23,12 +24,13 @@ const PIATTAFORMA_LABEL: Record<string, string> = {
 }
 
 export default async function HomePage() {
-  const [miniature, bestSellers, offerte, creators, siteSettings] = await Promise.all([
+  const [miniature, bestSellers, offerte, creators, siteSettings, negoziPubblici] = await Promise.all([
     getAllMiniature(),
     getBestSellers(),
     getMiniatureInOfferta(),
     getCreators(),
     getSiteSettings(),
+    getNegoziPubblici(),
   ])
 
   const featured = miniature.slice(0, 6)
@@ -139,6 +141,54 @@ export default async function HomePage() {
               {featured.map((m, i) => (
                 <AnimateIn key={m._id} delay={i * 80} distance={50} scale={0.96}>
                   <MiniatureCard miniatura={m} />
+                </AnimateIn>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Dove trovarci */}
+      {negoziPubblici.length > 0 && (
+        <section className="bg-gray-50 py-16 px-4" style={{ position: 'relative', zIndex: 10 }}>
+          <div className="max-w-6xl mx-auto">
+            <AnimateIn distance={40}>
+              <div className="flex items-center justify-between mb-10">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">Dove trovarci</h2>
+                  <p className="text-gray-500 mt-1 text-sm">Le miniature Quoll disponibili dal vivo</p>
+                </div>
+                <Link href="/negozi" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
+                  Vedi tutti
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </AnimateIn>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {negoziPubblici.map((n, i) => (
+                <AnimateIn key={n._id} delay={i * 80} distance={50} scale={0.96}>
+                  <Link
+                    href={`/negozi/${n.slug.current}`}
+                    className="group flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-200 hover:border-indigo-200 hover:shadow-lg transition-all"
+                  >
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-none">
+                      {n.immagine && (
+                        <Image
+                          src={urlFor(n.immagine).width(128).height(128).fit('crop').auto('format').url()}
+                          alt={n.nome}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{n.nome}</p>
+                      {n.indirizzo && <p className="text-sm text-gray-400 truncate">{n.indirizzo}</p>}
+                    </div>
+                  </Link>
                 </AnimateIn>
               ))}
             </div>

@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 const LINKS = [
   { href: '/', label: 'Home' },
   { href: '/catalogo', label: 'Catalogo' },
+  { href: '/negozi', label: 'Dove trovarci' },
   { href: '/come-funziona', label: 'Come funziona' },
   { href: '/personalizzazioni', label: 'Personalizzazioni' },
   { href: '/calcolatore', label: 'Calcolatore' },

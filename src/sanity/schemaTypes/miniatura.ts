@@ -19,6 +19,24 @@ export const miniatura = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'codice',
+      title: 'Codice prodotto',
+      type: 'string',
+      description:
+        'Codice breve per riconoscere il pezzo fisico (es. su un\'etichetta in negozio). Generato in automatico, modificabile.',
+      initialValue: async (_value, context) => {
+        const client = context.getClient({ apiVersion: '2024-01-01' })
+        const codici = await client.fetch<string[]>(`*[_type == "miniatura" && defined(codice)].codice`)
+        let max = 0
+        for (const c of codici) {
+          const m = /^Q(\d+)$/.exec(c ?? '')
+          if (m) max = Math.max(max, parseInt(m[1], 10))
+        }
+        return `Q${String(max + 1).padStart(4, '0')}`
+      },
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'bestSeller',
       title: 'Best Seller ⭐',
       type: 'boolean',
@@ -156,6 +174,9 @@ export const miniatura = defineType({
     }),
   ],
   preview: {
-    select: { title: 'nome', media: 'immagini.0' },
+    select: { title: 'nome', media: 'immagini.0', codice: 'codice' },
+    prepare({ title, media, codice }) {
+      return { title, subtitle: codice, media }
+    },
   },
 })

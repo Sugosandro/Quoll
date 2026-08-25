@@ -26,6 +26,11 @@ export default function ProductThumb({ miniatura, varianteNome }: ProductThumbPr
         )}
       </span>
       <span className="text-gray-700 truncate">
+        {miniatura?.codice && (
+          <span className="text-xs font-mono font-semibold text-indigo-500 bg-indigo-50 rounded px-1 py-0.5 mr-1.5">
+            {miniatura.codice}
+          </span>
+        )}
         {miniatura?.nome ?? 'Miniatura'}
         {varianteNome && <span className="text-gray-400"> — {varianteNome}</span>}
       </span>

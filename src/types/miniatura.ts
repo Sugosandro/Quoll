@@ -16,6 +16,7 @@ export interface Miniatura {
   _createdAt: string
   nome: string
   slug: { current: string }
+  codice?: string
   bestSeller?: boolean
   descrizione?: any[]
   immagini: SanityImageSource[]
@@ -35,7 +36,7 @@ export interface Miniatura {
 
 export type MiniatureListItem = Pick<
   Miniatura,
-  '_id' | 'nome' | 'slug' | 'immagini' | 'scala' | 'genere' | 'tipo' | 'varianti' | 'bestSeller'
+  '_id' | 'nome' | 'slug' | 'codice' | 'immagini' | 'scala' | 'genere' | 'tipo' | 'varianti' | 'bestSeller'
 > & { _createdAt: string }
 
 export interface Creator {

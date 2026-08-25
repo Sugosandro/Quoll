@@ -4,6 +4,7 @@ import type { SanityImageSource } from '@sanity/image-url'
 export interface MiniaturaRef {
   _id: string
   nome: string
+  codice?: string
   slug?: { current: string }
   immagine?: SanityImageSource
 }
@@ -25,6 +26,8 @@ export interface Negozio {
   indirizzo?: string
   percentualeNegozio?: number
   attivo?: boolean
+  visibilePubblicamente?: boolean
+  immagine?: SanityImageSource
 }
 
 export interface MovimentoGiacenza {

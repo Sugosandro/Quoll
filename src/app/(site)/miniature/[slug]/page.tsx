@@ -44,7 +44,7 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
 
   if (!miniatura) notFound()
 
-  const { nome, descrizione, immagini, file3d, scala, genere, tipo, videoFiles, videoUrls, varianti } = miniatura
+  const { nome, codice, descrizione, immagini, file3d, scala, genere, tipo, videoFiles, videoUrls, varianti } = miniatura
 
   const correlati = await getRelated(slug, genere, tipo)
 
@@ -143,7 +143,10 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
                 ))}
               </div>
             )}
-            <h1 className="text-3xl font-bold text-gray-900">{nome}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {nome}
+              {codice && <span className="ml-2 align-middle text-sm font-mono font-medium text-gray-400">{codice}</span>}
+            </h1>
             {descrizione && descrizione.length > 0 && (
               <div className="mt-4">
                 <RichText value={descrizione} />

@@ -105,6 +105,7 @@ export default function SegnalaVenditaForm({ giacenze }: SegnalaVenditaFormProps
                 : 'prezzo n.d.'
             return (
               <option key={g._key} value={g._key}>
+                {g.miniatura?.codice ? `[${g.miniatura.codice}] ` : ''}
                 {g.miniatura?.nome}
                 {g.varianteNome ? ` — ${g.varianteNome}` : ''} · {prezzoLabel} (in giacenza: {g.quantita})
               </option>

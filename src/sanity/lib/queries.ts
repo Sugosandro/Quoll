@@ -4,13 +4,14 @@ import type { Miniatura, MiniatureListItem, Creator, SiteSettings, Costo, Profil
 import type { Negozio, VenditaSegnalata, MovimentoGiacenza } from '@/types/negozio'
 
 /** Riferimento leggero a una miniatura con quanto serve per un link + thumbnail nelle pagine negozio/admin. */
-const miniaturaRefFields = groq`_id, nome, slug, "immagine": immagini[0]`
+const miniaturaRefFields = groq`_id, nome, codice, slug, "immagine": immagini[0]`
 
 const miniatureListFields = groq`
   _id,
   _createdAt,
   nome,
   slug,
+  codice,
   bestSeller,
   "immagini": immagini[0..4],
   scala,
@@ -48,6 +49,7 @@ export async function getMiniatura(slug: string): Promise<Miniatura | null> {
       _id,
       nome,
       slug,
+      codice,
       bestSeller,
       descrizione,
       immagini,
@@ -146,7 +148,7 @@ export async function getAllOrdini(): Promise<OrdineRow[]> {
 export async function getNegozioBySlug(slug: string): Promise<Negozio | null> {
   return client.withConfig({ useCdn: false }).fetch(
     groq`*[_type == "negozio" && slug.current == $slug][0] {
-      _id, nome, slug, indirizzo, percentualeNegozio, attivo
+      _id, nome, slug, indirizzo, percentualeNegozio, attivo, visibilePubblicamente, immagine
     }`,
     { slug },
     { cache: 'no-store' }
@@ -156,11 +158,75 @@ export async function getNegozioBySlug(slug: string): Promise<Negozio | null> {
 export async function getAllNegozi(): Promise<Negozio[]> {
   return client.withConfig({ useCdn: false }).fetch(
     groq`*[_type == "negozio"] | order(nome asc) {
-      _id, nome, slug, indirizzo, percentualeNegozio, attivo
+      _id, nome, slug, indirizzo, percentualeNegozio, attivo, visibilePubblicamente, immagine
     }`,
     {},
     { cache: 'no-store' }
   )
+}
+
+/** Negozi con la vetrina pubblica attiva, per la home e /negozi. */
+export async function getNegoziPubblici(): Promise<Negozio[]> {
+  return client.fetch(
+    groq`*[_type == "negozio" && visibilePubblicamente == true && attivo != false] | order(nome asc) {
+      _id, nome, slug, indirizzo, immagine
+    }`,
+    {},
+    { next: { revalidate: 300 } }
+  )
+}
+
+/** Un negozio pubblico per slug — 404 se non esiste o non è (più) pubblico. */
+export async function getNegozioPubblicoBySlug(slug: string): Promise<Negozio | null> {
+  return client.fetch(
+    groq`*[_type == "negozio" && slug.current == $slug && visibilePubblicamente == true && attivo != false][0] {
+      _id, nome, slug, indirizzo, percentualeNegozio, immagine
+    }`,
+    { slug },
+    { next: { revalidate: 60 } }
+  )
+}
+
+export interface DisponibilitaNegozio {
+  negozioId: string
+  negozioNome: string
+  negozioSlug: string
+  miniaturaIds: string[]
+}
+
+/** Per il filtro "disponibile in negozio" del catalogo: quali miniature sono in giacenza (>0) in ciascun negozio pubblico. */
+export async function getDisponibilitaPubblicaPerNegozio(): Promise<DisponibilitaNegozio[]> {
+  const negozi = await client.fetch<{ _id: string; nome: string; slug: { current: string } }[]>(
+    groq`*[_type == "negozio" && visibilePubblicamente == true && attivo != false]{ _id, nome, slug }`,
+    {},
+    { next: { revalidate: 300 } }
+  )
+  if (negozi.length === 0) return []
+
+  const negozioIds = negozi.map((n) => n._id)
+  const movimenti = await client.fetch<{ negozioId: string; miniaturaId: string; quantita: number }[]>(
+    groq`*[_type == "movimentoGiacenza" && negozio._ref in $ids]{
+      "negozioId": negozio._ref, "miniaturaId": miniatura._ref, quantita
+    }`,
+    { ids: negozioIds },
+    { next: { revalidate: 300 } }
+  )
+
+  const perNegozio = new Map<string, Map<string, number>>()
+  for (const m of movimenti) {
+    if (!perNegozio.has(m.negozioId)) perNegozio.set(m.negozioId, new Map())
+    const inner = perNegozio.get(m.negozioId)!
+    inner.set(m.miniaturaId, (inner.get(m.miniaturaId) ?? 0) + m.quantita)
+  }
+
+  return negozi.map((n) => ({
+    negozioId: n._id,
+    negozioNome: n.nome,
+    negozioSlug: n.slug.current,
+    miniaturaIds: Array.from((perNegozio.get(n._id) ?? new Map()).entries())
+      .filter(([, qty]) => qty > 0)
+      .map(([id]) => id),
+  }))
 }
 
 /** Movimenti di giacenza di un negozio (consegne/ritiri/vendite), più recenti prima. */

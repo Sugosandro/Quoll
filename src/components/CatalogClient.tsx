@@ -5,6 +5,7 @@ import MiniatureCard from './MiniatureCard'
 import AnimateIn from './AnimateIn'
 import SiteBanner from './SiteBanner'
 import type { MiniatureListItem } from '@/types/miniatura'
+import type { DisponibilitaNegozio } from '@/sanity/lib/queries'
 
 const NOVITA_GIORNI = 14
 
@@ -38,15 +39,19 @@ type SortKey = 'recenti' | 'prezzo-asc' | 'prezzo-desc' | 'nome'
 
 interface CatalogClientProps {
   miniature: MiniatureListItem[]
+  disponibilitaNegozi?: DisponibilitaNegozio[]
 }
 
-export default function CatalogClient({ miniature }: CatalogClientProps) {
+const QUALSIASI_NEGOZIO = '__qualsiasi__'
+
+export default function CatalogClient({ miniature, disponibilitaNegozi = [] }: CatalogClientProps) {
   const [query, setQuery] = useState('')
   const [activeGenere, setGenere] = useState<string | null>(null)
   const [activeTipo, setTipo] = useState<string | null>(null)
   const [activeScala, setScala] = useState<string | null>(null)
   const [soloNovita, setSoloNovita] = useState(false)
   const [soloOfferta, setSoloOfferta] = useState(false)
+  const [negozioFiltro, setNegozioFiltro] = useState('')
   const [sort, setSort] = useState<SortKey>('prezzo-desc')
 
   const generi = useMemo(
@@ -62,7 +67,17 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
     [miniature]
   )
 
-  const hasFilters = !!(activeGenere || activeTipo || activeScala || soloNovita || soloOfferta || query.trim())
+  const hasFilters = !!(activeGenere || activeTipo || activeScala || soloNovita || soloOfferta || negozioFiltro || query.trim())
+
+  const idsDisponibiliOvunque = useMemo(
+    () => new Set(disponibilitaNegozi.flatMap((n) => n.miniaturaIds)),
+    [disponibilitaNegozi]
+  )
+  const idsPerNegozioScelto = useMemo(() => {
+    if (!negozioFiltro || negozioFiltro === QUALSIASI_NEGOZIO) return null
+    const n = disponibilitaNegozi.find((n) => n.negozioId === negozioFiltro)
+    return new Set(n?.miniaturaIds ?? [])
+  }, [disponibilitaNegozi, negozioFiltro])
 
   const filtered = useMemo(() => {
     let result = [...miniature]
@@ -70,13 +85,16 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
     if (q) result = result.filter((m) =>
       m.nome.toLowerCase().includes(q) ||
       (m.genere ?? '').toLowerCase().includes(q) ||
-      (m.tipo ?? '').toLowerCase().includes(q)
+      (m.tipo ?? '').toLowerCase().includes(q) ||
+      (m.codice ?? '').toLowerCase().includes(q)
     )
     if (activeGenere) result = result.filter((m) => m.genere === activeGenere)
     if (activeTipo) result = result.filter((m) => m.tipo === activeTipo)
     if (activeScala) result = result.filter((m) => toArr(m.scala).includes(activeScala))
     if (soloNovita) result = result.filter((m) => isNuovo(m._createdAt))
     if (soloOfferta) result = result.filter((m) => hasValidSconto(m.varianti))
+    if (negozioFiltro === QUALSIASI_NEGOZIO) result = result.filter((m) => idsDisponibiliOvunque.has(m._id))
+    else if (idsPerNegozioScelto) result = result.filter((m) => idsPerNegozioScelto.has(m._id))
 
     result.sort((a, b) => {
       if (sort === 'recenti') return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
@@ -87,7 +105,7 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
     })
 
     return result
-  }, [miniature, query, activeGenere, activeTipo, activeScala, soloNovita, soloOfferta, sort])
+  }, [miniature, query, activeGenere, activeTipo, activeScala, soloNovita, soloOfferta, negozioFiltro, idsDisponibiliOvunque, idsPerNegozioScelto, sort])
 
   const clearAll = () => {
     setQuery('')
@@ -96,6 +114,7 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
     setScala(null)
     setSoloNovita(false)
     setSoloOfferta(false)
+    setNegozioFiltro('')
     setSort('recenti')
   }
 
@@ -128,7 +147,7 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
           </svg>
           <input
             type="search"
-            placeholder="Cerca per nome, genere, tipo…"
+            placeholder="Cerca per nome, codice, genere, tipo…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
@@ -156,6 +175,25 @@ export default function CatalogClient({ miniature }: CatalogClientProps) {
           <button onClick={() => setSoloOfferta((v) => !v)} className={quickChip(soloOfferta)}>
             In offerta
           </button>
+          {disponibilitaNegozi.length > 0 && (
+            <select
+              value={negozioFiltro}
+              onChange={(e) => setNegozioFiltro(e.target.value)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all cursor-pointer ${
+                negozioFiltro
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
+              }`}
+            >
+              <option value="">Disponibilità in negozio</option>
+              <option value={QUALSIASI_NEGOZIO}>Disponibile in un negozio (qualsiasi)</option>
+              {disponibilitaNegozi.map((n) => (
+                <option key={n.negozioId} value={n.negozioId}>
+                  Disponibile da {n.negozioNome}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {generi.length > 0 && (

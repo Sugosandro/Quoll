@@ -180,7 +180,7 @@ export default function GiacenzaCatalogo({ negozioId, negozioSlug, miniature, gi
   const filtrate = useMemo(() => {
     const q = ricerca.trim().toLowerCase()
     return conVarianti.filter((m) => {
-      if (q && !m.nome.toLowerCase().includes(q)) return false
+      if (q && !m.nome.toLowerCase().includes(q) && !(m.codice ?? '').toLowerCase().includes(q)) return false
       if (genere && m.genere !== genere) return false
       if (tipo && m.tipo !== tipo) return false
       if (soloAssegnati && !assegnatiIds.has(m._id)) return false
@@ -195,7 +195,7 @@ export default function GiacenzaCatalogo({ negozioId, negozioSlug, miniature, gi
           type="text"
           value={ricerca}
           onChange={(e) => setRicerca(e.target.value)}
-          placeholder="Cerca prodotto…"
+          placeholder="Cerca prodotto o codice…"
           className="flex-1 min-w-[160px] px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
         />
         {generiDisponibili.length > 0 && (
@@ -262,6 +262,11 @@ export default function GiacenzaCatalogo({ negozioId, negozioSlug, miniature, gi
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-gray-800 truncate mb-1 block hover:text-indigo-600 transition-colors"
               >
+                {m.codice && (
+                  <span className="text-xs font-mono font-semibold text-indigo-500 bg-indigo-50 rounded px-1 py-0.5 mr-1.5">
+                    {m.codice}
+                  </span>
+                )}
                 {m.nome}
               </Link>
               <div className="divide-y divide-gray-50">
