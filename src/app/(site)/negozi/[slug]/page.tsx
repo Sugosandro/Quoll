@@ -27,12 +27,16 @@ export default async function NegozioPubblicoPage({ params }: PageProps) {
 
   const [movimenti, miniature] = await Promise.all([
     getMovimentiPerNegozio(negozio._id),
-    getAllMiniature(),
+    getAllMiniature(true),
   ])
 
-  const giacenze = arricchisciConPrezzo(computeGiacenzaCorrente(movimenti), miniature).sort(
-    (a, b) => (b.prezzoScontato ?? b.prezzo ?? 0) - (a.prezzoScontato ?? a.prezzo ?? 0)
-  )
+  // "miniature" contiene solo i prodotti visibili nel catalogo: un prodotto nascosto
+  // non deve comparire nemmeno nella vetrina pubblica del negozio.
+  const visibiliIds = new Set(miniature.map((m) => m._id))
+  const giacenze = arricchisciConPrezzo(
+    computeGiacenzaCorrente(movimenti).filter((g) => g.miniatura && visibiliIds.has(g.miniatura._id)),
+    miniature
+  ).sort((a, b) => (b.prezzoScontato ?? b.prezzo ?? 0) - (a.prezzoScontato ?? a.prezzo ?? 0))
 
   // Per far scorrere tutte le foto del prodotto direttamente sulla card (come nel catalogo generale)
   const immaginiById = new Map(miniature.map((m) => [m._id, m.immagini ?? []]))

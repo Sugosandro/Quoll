@@ -137,14 +137,14 @@ export default async function AdminNegoziPage() {
             <h2 className="font-semibold text-gray-800 mb-4">Storico confermate</h2>
             <div className="space-y-2">
               {confermate.map((v) => (
-                <div key={v._id} className="flex items-center justify-between gap-3 text-sm py-2 border-b border-gray-100 last:border-0">
-                  <span className="text-gray-600 min-w-0">
-                    <span className="text-gray-500">{v.negozio?.nome} — </span>
+                <div key={v._id} className="flex items-center gap-3 text-sm py-2 border-b border-gray-100 last:border-0">
+                  <span className="w-20 sm:w-28 flex-none text-gray-400 truncate">{v.negozio?.nome}</span>
+                  <div className="flex-1 min-w-0">
                     <ProductThumb miniatura={v.miniatura} varianteNome={v.varianteNome} />
-                    <span className="text-gray-500"> ×{v.quantita}</span>
-                  </span>
-                  <span className="flex items-center gap-2 flex-none">
-                    <span className="text-xs text-green-600">✅ Confermata</span>
+                  </div>
+                  <span className="flex-none text-gray-400 text-xs w-8 text-right">×{v.quantita}</span>
+                  <span className="flex-none text-xs text-green-600 w-24 text-right">✅ Confermata</span>
+                  <span className="flex-none">
                     <EliminaButton id={v._id} endpoint="/api/admin/vendita-segnalata" conferma="Eliminare questa segnalazione? L'ordine e il movimento di giacenza collegati NON vengono toccati." />
                   </span>
                 </div>

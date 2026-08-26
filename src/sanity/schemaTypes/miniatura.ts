@@ -44,6 +44,14 @@ export const miniatura = defineType({
       description: 'Mostra nella sezione "Più venduti" in homepage',
     }),
     defineField({
+      name: 'visibileNelCatalogo',
+      title: 'Visibile nel catalogo',
+      type: 'boolean',
+      initialValue: true,
+      description:
+        'Disattiva per togliere il prodotto da catalogo, home e vetrine negozio pubbliche senza cancellarlo — resta gestibile qui e nell\'area admin/negozio, e la sua pagina diretta resta raggiungibile se qualcuno ha già il link.',
+    }),
+    defineField({
       name: 'descrizione',
       title: 'Descrizione',
       type: 'array',
@@ -174,9 +182,13 @@ export const miniatura = defineType({
     }),
   ],
   preview: {
-    select: { title: 'nome', media: 'immagini.0', codice: 'codice' },
-    prepare({ title, media, codice }) {
-      return { title, subtitle: codice, media }
+    select: { title: 'nome', media: 'immagini.0', codice: 'codice', visibile: 'visibileNelCatalogo' },
+    prepare({ title, media, codice, visibile }) {
+      return {
+        title: `${visibile === false ? '🙈 ' : ''}${title}`,
+        subtitle: codice,
+        media,
+      }
     },
   },
 })

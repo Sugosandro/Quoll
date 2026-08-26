@@ -5,7 +5,7 @@ export const revalidate = 60
 
 export default async function CatalogoPage() {
   const [miniature, disponibilitaNegozi] = await Promise.all([
-    getAllMiniature(),
+    getAllMiniature(true),
     getDisponibilitaPubblicaPerNegozio(),
   ])
 

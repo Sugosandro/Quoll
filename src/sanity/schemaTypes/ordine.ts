@@ -29,6 +29,14 @@ export const ordine = defineType({
       components: { input: VarianteInput },
     }),
     defineField({
+      name: 'quantita',
+      title: 'Quantità',
+      type: 'number',
+      initialValue: 1,
+      description: 'Numero di pezzi in questo ordine, se più di uno',
+      validation: (R) => R.min(1).integer(),
+    }),
+    defineField({
       name: 'prezzo',
       title: 'Prezzo concordato (€)',
       type: 'number',
@@ -97,17 +105,19 @@ export const ordine = defineType({
       miniatura: 'miniatura.nome',
       stato: 'stato',
       prezzo: 'prezzo',
+      quantita: 'quantita',
       // Nessuna immagine propria sull'ordine: prende in automatico la prima
       // foto della miniatura collegata, seguendo il riferimento.
       media: 'miniatura.immagini.0',
     },
-    prepare({ nome, miniatura, stato, prezzo, media }) {
+    prepare({ nome, miniatura, stato, prezzo, quantita, media }) {
       const icone: Record<string, string> = {
         ricevuto: '📥', in_lavorazione: '⚙️', pronto: '✅', consegnato: '📦',
       }
+      const miniaturaLabel = quantita > 1 ? `${miniatura} ×${quantita}` : miniatura
       return {
         title: `${icone[stato] ?? ''} ${nome ?? 'Cliente sconosciuto'}`,
-        subtitle: [miniatura, prezzo != null ? `€${prezzo}` : null].filter(Boolean).join(' · '),
+        subtitle: [miniaturaLabel, prezzo != null ? `€${prezzo}` : null].filter(Boolean).join(' · '),
         media,
       }
     },

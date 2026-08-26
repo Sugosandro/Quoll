@@ -82,6 +82,9 @@ export const venditaSegnalata = defineType({
       name: 'stato',
       title: 'Stato',
       type: 'string',
+      description:
+        'Non modificare da qui: cambia solo l\'etichetta, non crea l\'ordine né aggiorna la giacenza. Usa il bottone "Crea ordine ufficiale" in /admin/negozi.',
+      readOnly: true,
       options: {
         list: [
           { title: '🆕 Da revisionare', value: 'segnalata' },

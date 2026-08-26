@@ -187,7 +187,12 @@ export default function OrdersTable({ ordini, percentualeNegozio }: OrdersTableP
                     </Link>
                   ) : (o.miniaturaNome ?? '—')}
                 </td>
-                <td className="px-4 py-3 text-gray-500">{o.varianteNome ?? '—'}</td>
+                <td className="px-4 py-3 text-gray-500">
+                  {o.varianteNome ?? '—'}
+                  {o.quantita != null && o.quantita > 1 && (
+                    <span className="ml-1.5 text-xs font-semibold text-indigo-600">×{o.quantita}</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATO_STYLE[o.stato]}`}>
                     {STATO_LABEL[o.stato]}

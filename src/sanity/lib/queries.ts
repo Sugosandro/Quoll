@@ -20,9 +20,10 @@ const miniatureListFields = groq`
   varianti[] { _key, nome, prezzo, prezzoScontato, scadenzaSconto, disponibilita, quantita }
 `
 
-export async function getAllMiniature(): Promise<MiniatureListItem[]> {
+export async function getAllMiniature(soloVisibili = false): Promise<MiniatureListItem[]> {
+  const filter = soloVisibili ? '_type == "miniatura" && visibileNelCatalogo != false' : '_type == "miniatura"'
   return client.fetch(
-    groq`*[_type == "miniatura"] | order(_createdAt desc) { ${miniatureListFields} }`,
+    groq`*[${filter}] | order(_createdAt desc) { ${miniatureListFields} }`,
     {},
     { next: { revalidate: 60 } }
   )
@@ -30,9 +31,11 @@ export async function getAllMiniature(): Promise<MiniatureListItem[]> {
 
 export async function getMiniatureFiltrate(
   genere?: string,
-  tipo?: string
+  tipo?: string,
+  soloVisibili = false
 ): Promise<MiniatureListItem[]> {
   const conditions = ['_type == "miniatura"']
+  if (soloVisibili) conditions.push('visibileNelCatalogo != false')
   if (genere) conditions.push(`genere == $genere`)
   if (tipo) conditions.push(`tipo == $tipo`)
 
@@ -66,17 +69,21 @@ export async function getMiniatura(slug: string): Promise<Miniatura | null> {
   )
 }
 
-export async function getBestSellers(): Promise<MiniatureListItem[]> {
+export async function getBestSellers(soloVisibili = false): Promise<MiniatureListItem[]> {
+  const filter = soloVisibili
+    ? '_type == "miniatura" && bestSeller == true && visibileNelCatalogo != false'
+    : '_type == "miniatura" && bestSeller == true'
   return client.fetch(
-    groq`*[_type == "miniatura" && bestSeller == true] | order(_createdAt desc) { ${miniatureListFields} }`,
+    groq`*[${filter}] | order(_createdAt desc) { ${miniatureListFields} }`,
     {},
     { next: { revalidate: 60 } }
   )
 }
 
-export async function getMiniatureInOfferta(): Promise<MiniatureListItem[]> {
+export async function getMiniatureInOfferta(soloVisibili = false): Promise<MiniatureListItem[]> {
+  const visibileCond = soloVisibili ? ' && visibileNelCatalogo != false' : ''
   return client.fetch(
-    groq`*[_type == "miniatura" && count(varianti[defined(prezzoScontato) && (!defined(scadenzaSconto) || dateTime(scadenzaSconto) > dateTime(now()))]) > 0] | order(_createdAt desc) { ${miniatureListFields} }`,
+    groq`*[_type == "miniatura"${visibileCond} && count(varianti[defined(prezzoScontato) && (!defined(scadenzaSconto) || dateTime(scadenzaSconto) > dateTime(now()))]) > 0] | order(_createdAt desc) { ${miniatureListFields} }`,
     {},
     { next: { revalidate: 60 } }
   )
@@ -109,6 +116,7 @@ export interface OrdineRow {
   miniaturaNome?: string
   miniaturaSlug?: string
   varianteNome?: string
+  quantita?: number
   prezzo?: number
   venditaTramiteNegozio?: boolean
   negozioId?: string
@@ -129,6 +137,7 @@ export async function getAllOrdini(): Promise<OrdineRow[]> {
       "miniaturaNome": miniatura->nome,
       "miniaturaSlug": miniatura->slug.current,
       varianteNome,
+      quantita,
       prezzo,
       venditaTramiteNegozio,
       "negozioId": negozio->_id,
@@ -308,7 +317,7 @@ export async function getRelated(
   genere?: string | null,
   tipo?: string | null
 ): Promise<MiniatureListItem[]> {
-  const conditions = ['_type == "miniatura"', 'slug.current != $slug']
+  const conditions = ['_type == "miniatura"', 'slug.current != $slug', 'visibileNelCatalogo != false']
   if (genere) conditions.push('genere == $genere')
   else if (tipo) conditions.push('tipo == $tipo')
 

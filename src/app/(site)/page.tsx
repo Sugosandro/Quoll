@@ -25,9 +25,9 @@ const PIATTAFORMA_LABEL: Record<string, string> = {
 
 export default async function HomePage() {
   const [miniature, bestSellers, offerte, creators, siteSettings, negoziPubblici] = await Promise.all([
-    getAllMiniature(),
-    getBestSellers(),
-    getMiniatureInOfferta(),
+    getAllMiniature(true),
+    getBestSellers(true),
+    getMiniatureInOfferta(true),
     getCreators(),
     getSiteSettings(),
     getNegoziPubblici(),

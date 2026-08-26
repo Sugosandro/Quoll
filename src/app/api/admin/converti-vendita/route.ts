@@ -49,6 +49,7 @@ export async function POST(req: Request) {
     cliente: { nome: 'Cliente negozio (da segnalazione)' },
     miniatura: { _type: 'reference', _ref: segnalazione.miniatura._ref },
     varianteNome: segnalazione.varianteNome,
+    quantita: segnalazione.quantita,
     prezzo: segnalazione.prezzoStimato,
     stato: 'consegnato',
     dataOrdine: segnalazione.data ?? new Date().toISOString(),
