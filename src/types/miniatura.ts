@@ -51,6 +51,7 @@ export interface Creator {
 export interface HeroSlide {
   _key: string
   immagine?: SanityImageSource
+  videoFile?: { asset?: { url?: string; mimeType?: string } }
   videoUrl?: string
   titolo?: string
   sottotitolo?: string

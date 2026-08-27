@@ -103,7 +103,7 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
   return client.fetch(
     groq`*[_type == "siteSettings" && _id == "siteSettings"][0] {
       percentualeNegozio,
-      heroSlides[] { _key, immagine, videoUrl, titolo, sottotitolo }
+      heroSlides[] { _key, immagine, "videoFile": videoFile{ asset->{ url, mimeType } }, videoUrl, titolo, sottotitolo }
     }`,
     {},
     { next: { revalidate: 60 } }

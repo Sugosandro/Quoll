@@ -29,10 +29,18 @@ export const siteSettings = defineType({
               options: { hotspot: true },
             }),
             defineField({
+              name: 'videoFile',
+              title: 'Video (caricato)',
+              type: 'file',
+              options: { accept: 'video/*' },
+              description:
+                'Consigliato: carica qui il video (mp4, H.264) per servirlo direttamente dal sito, senza loghi/UI di YouTube. Se presente ha priorità sul link esterno qui sotto.',
+            }),
+            defineField({
               name: 'videoUrl',
-              title: 'URL Video (YouTube / Vimeo)',
+              title: 'URL Video (YouTube / Vimeo) — legacy',
               type: 'url',
-              description: 'Opzionale — se presente viene usato al posto dell\'immagine',
+              description: 'Solo se preferisci un link esterno invece di caricare il file. Usato al posto dell\'immagine se non c\'è un video caricato.',
             }),
             defineField({
               name: 'titolo',

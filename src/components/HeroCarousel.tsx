@@ -16,10 +16,22 @@ function parseVideo(url: string) {
 }
 
 function SlideBackground({ slide }: { slide: HeroSlide | undefined }) {
-  const video = slide?.videoUrl ? parseVideo(slide.videoUrl) : null
+  const videoFileUrl = slide?.videoFile?.asset?.url
+  const video = !videoFileUrl && slide?.videoUrl ? parseVideo(slide.videoUrl) : null
   const imageUrl = slide?.immagine
     ? urlFor(slide.immagine).width(1920).height(1080).fit('crop').auto('format').url()
     : null
+  if (videoFileUrl) return (
+    // Video caricato su Sanity: tag <video> nativo, servito dalla CDN, niente iframe/loghi esterni
+    <video
+      src={videoFileUrl}
+      className="absolute inset-0 w-full h-full object-cover"
+      autoPlay
+      muted
+      loop
+      playsInline
+    />
+  )
   if (video) return (
     <VideoEmbed platform={video.platform} id={video.id}
       className="absolute inset-0 w-full h-full scale-110" background title="hero video" />
