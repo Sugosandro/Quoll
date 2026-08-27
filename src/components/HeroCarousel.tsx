@@ -22,14 +22,24 @@ function SlideBackground({ slide }: { slide: HeroSlide | undefined }) {
     ? urlFor(slide.immagine).width(1920).height(1080).fit('crop').auto('format').url()
     : null
   if (videoFileUrl) return (
-    // Video caricato su Sanity: tag <video> nativo, servito dalla CDN, niente iframe/loghi esterni
+    // Video caricato su Sanity: tag <video> nativo, servito dalla CDN, niente iframe/loghi esterni.
+    // object-contain (non cover): mostra il video intero senza ritagliarlo — utile perché non
+    // sappiamo a priori il suo formato (es. verticale da iPhone in un riquadro hero orizzontale).
+    // Le eventuali bande si mimetizzano con lo sfondo scuro dell'hero.
+    // webkit-playsinline + disablePictureInPicture evitano che Safari/iOS lo apra a schermo intero
+    // nativo durante l'autoplay.
     <video
       src={videoFileUrl}
-      className="absolute inset-0 w-full h-full object-cover"
+      className="absolute inset-0 w-full h-full object-contain"
+      style={{ objectFit: 'contain' }}
       autoPlay
       muted
       loop
       playsInline
+      disablePictureInPicture
+      controls={false}
+      // eslint-disable-next-line react/no-unknown-property
+      webkit-playsinline="true"
     />
   )
   if (video) return (
