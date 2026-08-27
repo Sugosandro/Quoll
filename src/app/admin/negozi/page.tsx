@@ -145,7 +145,11 @@ export default async function AdminNegoziPage() {
                   <span className="flex-none text-gray-400 text-xs w-8 text-right">×{v.quantita}</span>
                   <span className="flex-none text-xs text-green-600 w-24 text-right">✅ Confermata</span>
                   <span className="flex-none">
-                    <EliminaButton id={v._id} endpoint="/api/admin/vendita-segnalata" conferma="Eliminare questa segnalazione? L'ordine e il movimento di giacenza collegati NON vengono toccati." />
+                    <EliminaButton
+                      id={v._id}
+                      endpoint="/api/admin/elimina-vendita-confermata"
+                      conferma="Eliminare questa segnalazione, l'ordine ufficiale collegato e l'eventuale movimento di giacenza? L'operazione è unica e non si può annullare."
+                    />
                   </span>
                 </div>
               ))}

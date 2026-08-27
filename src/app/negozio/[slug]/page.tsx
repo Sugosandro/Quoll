@@ -13,6 +13,7 @@ import {
 import SegnalaVenditaForm from '@/components/negozio/SegnalaVenditaForm'
 import LogoutButton from '@/components/negozio/LogoutButton'
 import ProductThumb from '@/components/ProductThumb'
+import RitiraSegnalazioneButton from '@/components/negozio/RitiraSegnalazioneButton'
 
 const MOTIVO_LABEL: Record<string, string> = {
   consegna: '📦 Consegna',
@@ -163,7 +164,10 @@ export default async function NegozioPortalPage({ params }: { params: Promise<{ 
                       {v.scontoExtra ? ` · sconto extra -€${v.scontoExtra}` : ''}
                     </span>
                   </div>
-                  <span className="text-xs font-medium text-gray-500 flex-none">{STATO_LABEL[v.stato] ?? v.stato}</span>
+                  <span className="flex items-center gap-2 flex-none">
+                    <span className="text-xs font-medium text-gray-500">{STATO_LABEL[v.stato] ?? v.stato}</span>
+                    {v.stato === 'segnalata' && <RitiraSegnalazioneButton id={v._id} />}
+                  </span>
                 </div>
               ))}
             </div>

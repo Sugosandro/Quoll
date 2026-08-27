@@ -250,23 +250,30 @@ export default function SegnalaVenditaForm({ giacenze }: SegnalaVenditaFormProps
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={r.prezzoStimato}
-                    onChange={(e) => aggiorna(r.giacenzaKey, 'prezzoStimato', e.target.value)}
-                    placeholder="Prezzo incassato €"
-                    className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs"
-                  />
+                  <div>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={r.prezzoStimato}
+                      onChange={(e) => aggiorna(r.giacenzaKey, 'prezzoStimato', e.target.value)}
+                      placeholder="Prezzo unitario incassato €"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs"
+                    />
+                    {r.quantita > 1 && r.prezzoStimato && (
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        = €{(Number(r.prezzoStimato) * r.quantita).toFixed(2)} totali ({r.quantita} pezzi)
+                      </p>
+                    )}
+                  </div>
                   <input
                     type="number"
                     min={0}
                     step="0.01"
                     value={r.scontoExtra}
                     onChange={(e) => aggiorna(r.giacenzaKey, 'scontoExtra', e.target.value)}
-                    placeholder="Sconto extra €"
-                    className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs"
+                    placeholder="Sconto extra a pezzo €"
+                    className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs h-[30px]"
                   />
                 </div>
                 {haOfferta && (

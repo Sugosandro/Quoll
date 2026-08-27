@@ -126,3 +126,60 @@ export async function POST(req: Request) {
   revalidatePath('/admin/negozi')
   return NextResponse.json({ ok: true, count: items.length })
 }
+
+/**
+ * Il negozio può ritirare una PROPRIA segnalazione, ma solo finché è ancora
+ * "da revisionare" — una volta confermata in ordine ufficiale (e quindi già
+ * scalata dalla giacenza), solo l'admin può eliminarla da /admin/negozi.
+ */
+export async function DELETE(req: Request) {
+  const cookieStore = await cookies()
+  const slug = await verifyNegozioCookie(cookieStore.get(NEGOZIO_COOKIE)?.value)
+  if (!slug) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
+  }
+
+  let id: unknown
+  try {
+    ;({ id } = await req.json())
+  } catch {
+    return NextResponse.json({ error: 'Richiesta non valida' }, { status: 400 })
+  }
+  if (typeof id !== 'string' || !id) {
+    return NextResponse.json({ error: 'id mancante' }, { status: 400 })
+  }
+  if (!process.env.SANITY_API_TOKEN) {
+    return NextResponse.json({ error: 'token di scrittura non configurato' }, { status: 500 })
+  }
+
+  const negozio = await client
+    .withConfig({ useCdn: false })
+    .fetch<{ _id: string } | null>(`*[_type == "negozio" && slug.current == $slug][0]{ _id }`, { slug })
+  if (!negozio) {
+    return NextResponse.json({ error: 'Negozio non trovato' }, { status: 404 })
+  }
+
+  const segnalazione = await client
+    .withConfig({ useCdn: false })
+    .fetch<{ _id: string; stato: string; negozio?: { _ref: string } } | null>(
+      `*[_type == "venditaSegnalata" && _id == $id][0]{ _id, stato, negozio }`,
+      { id }
+    )
+  if (!segnalazione) {
+    return NextResponse.json({ error: 'Segnalazione non trovata' }, { status: 404 })
+  }
+  // Non ci fidiamo di un negozioId inviato dal client: verifichiamo che la
+  // segnalazione appartenga davvero al negozio autenticato da questo cookie.
+  if (segnalazione.negozio?._ref !== negozio._id) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 })
+  }
+  if (segnalazione.stato !== 'segnalata') {
+    return NextResponse.json({ error: 'Non puoi ritirare una segnalazione già confermata' }, { status: 409 })
+  }
+
+  await writeClient.delete(id)
+
+  revalidatePath(`/negozio/${slug}`)
+  revalidatePath('/admin/negozi')
+  return NextResponse.json({ ok: true })
+}
