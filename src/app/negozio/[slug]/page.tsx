@@ -67,12 +67,14 @@ export default async function NegozioPortalPage({ params }: { params: Promise<{ 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{negozio.nome}</h1>
+        <div className="flex items-center justify-between gap-3 mb-8">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-gray-900 truncate">{negozio.nome}</h1>
             <p className="text-sm text-gray-400 mt-0.5">Portale negozio · Quoll</p>
           </div>
-          <LogoutButton slug={slug} />
+          <div className="flex-none">
+            <LogoutButton slug={slug} />
+          </div>
         </div>
 
         {/* Credito */}
@@ -98,14 +100,16 @@ export default async function NegozioPortalPage({ params }: { params: Promise<{ 
                   key={g._key}
                   className="flex items-center justify-between gap-3 text-sm py-2 border-b border-gray-100 last:border-0"
                 >
-                  <ProductThumb miniatura={g.miniatura} varianteNome={g.varianteNome} />
-                  <div className="flex items-center gap-3 flex-none">
+                  <div className="min-w-0 flex-1">
+                    <ProductThumb miniatura={g.miniatura} varianteNome={g.varianteNome} />
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-none">
                     {g.prezzoScontato != null ? (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 whitespace-nowrap">
                         <span className="line-through">€{g.prezzo}</span> €{g.prezzoScontato}
                       </span>
                     ) : g.prezzo != null ? (
-                      <span className="text-xs text-gray-400">€{g.prezzo}</span>
+                      <span className="text-xs text-gray-400 whitespace-nowrap">€{g.prezzo}</span>
                     ) : null}
                     <span className="font-medium text-gray-900">{g.quantita}</span>
                   </div>

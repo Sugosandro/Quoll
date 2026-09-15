@@ -233,7 +233,7 @@ export default function SegnalaVenditaForm({ giacenze }: SegnalaVenditaFormProps
             return (
               <div key={r.giacenzaKey} className="bg-gray-50 border border-gray-100 rounded-xl p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-gray-700 truncate">
+                  <span className="text-sm text-gray-700 truncate min-w-0">
                     {g.miniatura?.codice && (
                       <span className="text-xs font-mono font-semibold text-indigo-500 bg-indigo-50 rounded px-1 py-0.5 mr-1.5">
                         {g.miniatura.codice}

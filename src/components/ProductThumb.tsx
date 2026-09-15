@@ -13,7 +13,7 @@ export default function ProductThumb({ miniatura, varianteNome }: ProductThumbPr
   const href = miniatura?.slug?.current ? `/miniature/${miniatura.slug.current}` : null
 
   const content = (
-    <span className="inline-flex items-center gap-2 min-w-0">
+    <span className="flex items-center gap-2 min-w-0">
       <span className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-100 flex-none">
         {miniatura?.immagine && (
           <Image
@@ -25,7 +25,7 @@ export default function ProductThumb({ miniatura, varianteNome }: ProductThumbPr
           />
         )}
       </span>
-      <span className="text-gray-700 truncate">
+      <span className="text-gray-700 truncate min-w-0">
         {miniatura?.codice && (
           <span className="text-xs font-mono font-semibold text-indigo-500 bg-indigo-50 rounded px-1 py-0.5 mr-1.5">
             {miniatura.codice}
@@ -40,7 +40,7 @@ export default function ProductThumb({ miniatura, varianteNome }: ProductThumbPr
   if (!href) return content
 
   return (
-    <Link href={href} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors">
+    <Link href={href} target="_blank" rel="noopener noreferrer" className="flex min-w-0 hover:text-indigo-600 transition-colors">
       {content}
     </Link>
   )
