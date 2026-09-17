@@ -40,7 +40,8 @@ const FAQ = [
   { q: 'Posso portare il mio file STL?', a: 'Sì, assolutamente. Inviami il file su WhatsApp e valutiamo insieme fattibilità, materiale e prezzo.' },
   { q: 'Quali materiali usi?', a: 'PLA per la maggior parte delle miniature (robusto, disponibile in tanti colori) e resina per i dettagli più fini.' },
   { q: 'Posso richiedere una miniatura personalizzata?', a: 'Certo. Guarda la pagina Personalizzazioni per saperne di più.' },
-  { q: 'È possibile la spedizione?', a: 'Sì. Possiamo accordarci per spedire la miniatura tramite corriere. Il costo di spedizione viene concordato a parte in base al peso e alla destinazione. Scrivimi su WhatsApp per un preventivo completo.' },
+  { q: 'È possibile la spedizione?', a: 'Sì, spedisco tramite corriere in tutta Italia. Il costo indicativo è di circa 3€ (può variare in base al corriere/metodo usato). I tempi dipendono dal pezzo: se è già disponibile, arriva in 3-5 giorni lavorativi dalla spedizione; se va stampato su ordinazione, ai tempi di consegna del corriere si sommano i giorni di produzione, variabili in base a complessità e quantità. Scrivimi su WhatsApp per un preventivo e una stima precisa.' },
+  { q: 'Posso restituire un ordine?', a: 'Sì, hai 14 giorni di tempo dalla consegna per richiedere un reso, salvo il caso di personalizzazioni specifiche concordate insieme che rendono il pezzo non rivendibile — in quel caso ne parliamo caso per caso prima di procedere. Scrivimi su WhatsApp per attivare un reso.' },
 ]
 
 export default function ComeFunzionaPage() {

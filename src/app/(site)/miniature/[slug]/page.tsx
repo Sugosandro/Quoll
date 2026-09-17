@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import ProductGallery from '@/components/ProductGallery'
 import VariantSelector from '@/components/VariantSelector'
@@ -73,6 +74,25 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
   const disponibile = (varianti ?? []).some((v) => v.disponibilita !== 'esaurito')
   const pageUrl = `${SITE_URL}/miniature/${slug}`
 
+  // Spedizione e resi: dati reali del negozio (corriere in Italia, ~€3, tempi variabili
+  // in base a produzione su ordinazione o pezzo già disponibile; reso entro 14 giorni).
+  const shippingDetails = {
+    '@type': 'OfferShippingDetails',
+    shippingRate: { '@type': 'MonetaryAmount', value: 3, currency: 'EUR' },
+    shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IT' },
+    deliveryTime: {
+      '@type': 'ShippingDeliveryTime',
+      handlingTime: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 12, unitCode: 'DAY' },
+      transitTime: { '@type': 'QuantitativeValue', minValue: 3, maxValue: 5, unitCode: 'DAY' },
+    },
+  }
+  const hasMerchantReturnPolicy = {
+    '@type': 'MerchantReturnPolicy',
+    applicableCountry: 'IT',
+    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+    merchantReturnDays: 14,
+  }
+
   const productJsonLd =
     minPrezzo != null
       ? {
@@ -82,6 +102,8 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
           image: (immagini ?? []).slice(0, 4).map((img) => urlFor(img).width(1200).height(1200).fit('crop').auto('format').url()),
           description: `Miniatura stampata in 3D: ${nome}`,
           url: pageUrl,
+          brand: { '@type': 'Brand', name: 'Quoll' },
+          ...(codice ? { mpn: codice } : {}),
           offers:
             maxPrezzo != null && maxPrezzo !== minPrezzo
               ? {
@@ -91,6 +113,8 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
                   highPrice: maxPrezzo,
                   offerCount: prezziAttivi.length,
                   availability: disponibile ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                  shippingDetails,
+                  hasMerchantReturnPolicy,
                 }
               : {
                   '@type': 'Offer',
@@ -98,6 +122,8 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
                   price: minPrezzo,
                   availability: disponibile ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
                   url: pageUrl,
+                  shippingDetails,
+                  hasMerchantReturnPolicy,
                 },
         }
       : null
@@ -169,6 +195,13 @@ export default async function MiniatureDetailPage({ params }: PageProps) {
               Contattami su WhatsApp
             </a>
           )}
+
+          <p className="text-xs text-gray-400 text-center">
+            Spedizione in Italia ~€3 · Reso entro 14 giorni —{' '}
+            <Link href="/come-funziona" className="underline hover:text-gray-600 transition-colors">
+              scopri come funziona
+            </Link>
+          </p>
         </div>
       </div>
       {correlati.length > 0 && (
