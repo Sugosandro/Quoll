@@ -44,6 +44,13 @@ export const miniatura = defineType({
       description: 'Mostra nella sezione "Più venduti" in homepage',
     }),
     defineField({
+      name: 'inEvidenza',
+      title: 'In evidenza 🌟',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Mostra nella sezione "In evidenza" in cima alla homepage',
+    }),
+    defineField({
       name: 'visibileNelCatalogo',
       title: 'Visibile nel catalogo',
       type: 'boolean',
@@ -56,6 +63,19 @@ export const miniatura = defineType({
       title: 'Descrizione',
       type: 'array',
       of: [{ type: 'block' }],
+      initialValue: [
+        {
+          _type: 'block',
+          style: 'normal',
+          children: [
+            {
+              _type: 'span',
+              text: 'Disponibile anche dipinta su commissione: il prezzo indicativo puoi calcolarlo con il calcolatore prezzi, ma i dettagli finali li decidiamo insieme su WhatsApp.',
+            },
+          ],
+        },
+      ],
+      description: 'Compare precompilata con un testo guida: sostituiscila pure con la descrizione reale.',
     }),
     defineField({
       name: 'immagini',

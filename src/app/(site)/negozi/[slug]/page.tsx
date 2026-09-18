@@ -6,6 +6,7 @@ import { getNegozioPubblicoBySlug, getMovimentiPerNegozio, getAllMiniature } fro
 import { computeGiacenzaCorrente, arricchisciConPrezzo } from '@/lib/giacenza'
 import { urlFor } from '@/sanity/lib/image'
 import NegozioProdotti, { type RigaNegozio } from '@/components/NegozioProdotti'
+import { SITE_URL } from '@/lib/siteUrl'
 
 export const revalidate = 60
 
@@ -47,8 +48,27 @@ export default async function NegozioPubblicoPage({ params }: PageProps) {
       .map((img) => urlFor(img).width(400).height(400).fit('crop').auto('format').url()),
   }))
 
+  // Dati strutturati Store (schema.org): sono negozi fisici reali dove le miniature
+  // Quoll sono esposte dal vivo — aiuta Google ad associare il sito alla zona di Roma.
+  const storeJsonLd = negozio.indirizzo
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        name: negozio.nome,
+        address: negozio.indirizzo,
+        url: `${SITE_URL}/negozi/${slug}`,
+        ...(negozio.immagine ? { image: urlFor(negozio.immagine).width(800).height(800).fit('crop').auto('format').url() } : {}),
+      }
+    : null
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
+      {storeJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd).replace(/</g, '\\u003c') }}
+        />
+      )}
       <Link href="/negozi" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 mb-8 transition-colors shadow-sm">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

@@ -6,8 +6,8 @@ import { urlFor } from '@/sanity/lib/image'
 export const revalidate = 300
 
 export const metadata = {
-  title: 'Dove trovarci · Quoll',
-  description: 'I negozi dove puoi trovare le miniature Quoll dal vivo.',
+  title: 'Dove trovarci a Roma · Quoll',
+  description: 'I negozi di Roma dove trovare dal vivo le miniature Quoll per D&D e tabletop.',
 }
 
 export default async function NegoziPage() {
@@ -16,8 +16,8 @@ export default async function NegoziPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dove trovarci</h1>
-        <p className="text-gray-500 mt-1">I negozi che espongono le miniature Quoll dal vivo</p>
+        <h1 className="text-3xl font-bold text-gray-900">Dove trovarci a Roma</h1>
+        <p className="text-gray-500 mt-1">I negozi di Roma che espongono le miniature Quoll dal vivo</p>
       </div>
 
       {negozi.length === 0 ? (

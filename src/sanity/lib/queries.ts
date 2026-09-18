@@ -13,6 +13,7 @@ const miniatureListFields = groq`
   slug,
   codice,
   bestSeller,
+  inEvidenza,
   "immagini": immagini[0..4],
   scala,
   genere,
@@ -73,6 +74,17 @@ export async function getBestSellers(soloVisibili = false): Promise<MiniatureLis
   const filter = soloVisibili
     ? '_type == "miniatura" && bestSeller == true && visibileNelCatalogo != false'
     : '_type == "miniatura" && bestSeller == true'
+  return client.fetch(
+    groq`*[${filter}] | order(_createdAt desc) { ${miniatureListFields} }`,
+    {},
+    { next: { revalidate: 60 } }
+  )
+}
+
+export async function getInEvidenza(soloVisibili = false): Promise<MiniatureListItem[]> {
+  const filter = soloVisibili
+    ? '_type == "miniatura" && inEvidenza == true && visibileNelCatalogo != false'
+    : '_type == "miniatura" && inEvidenza == true'
   return client.fetch(
     groq`*[${filter}] | order(_createdAt desc) { ${miniatureListFields} }`,
     {},

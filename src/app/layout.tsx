@@ -10,15 +10,15 @@ const cinzel = Cinzel({ subsets: ['latin'], variable: '--font-cinzel', weight: [
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Quoll · Stampa 3D professionale su ordinazione',
-  description: 'Miniature 3D stampate in PLA e resina su ordinazione: personaggi, veicoli, edifici fantasy, sci-fi, storici e horror.',
+  title: 'Quoll · Miniature 3D per D&D e tabletop, stampate a Roma',
+  description: 'Miniature stampate in 3D per D&D e altri giochi da tavolo: personaggi, mostri, veicoli ed edifici fantasy, sci-fi, storici e horror. Prodotte a Roma su ordinazione, spedizioni in tutta Italia.',
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',
   },
   openGraph: {
-    title: 'Quoll · Stampa 3D professionale su ordinazione',
-    description: 'Miniature 3D stampate in PLA e resina su ordinazione: personaggi, veicoli, edifici fantasy, sci-fi, storici e horror.',
+    title: 'Quoll · Miniature 3D per D&D e tabletop, stampate a Roma',
+    description: 'Miniature stampate in 3D per D&D e altri giochi da tavolo: personaggi, mostri, veicoli ed edifici fantasy, sci-fi, storici e horror. Prodotte a Roma su ordinazione, spedizioni in tutta Italia.',
     images: [{ url: '/logo.png' }],
   },
 }

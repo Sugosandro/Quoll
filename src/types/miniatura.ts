@@ -18,6 +18,7 @@ export interface Miniatura {
   slug: { current: string }
   codice?: string
   bestSeller?: boolean
+  inEvidenza?: boolean
   descrizione?: any[]
   immagini: SanityImageSource[]
   file3d?: {
@@ -36,7 +37,7 @@ export interface Miniatura {
 
 export type MiniatureListItem = Pick<
   Miniatura,
-  '_id' | 'nome' | 'slug' | 'codice' | 'immagini' | 'scala' | 'genere' | 'tipo' | 'varianti' | 'bestSeller'
+  '_id' | 'nome' | 'slug' | 'codice' | 'immagini' | 'scala' | 'genere' | 'tipo' | 'varianti' | 'bestSeller' | 'inEvidenza'
 > & { _createdAt: string }
 
 export interface Creator {

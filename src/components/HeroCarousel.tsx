@@ -150,9 +150,13 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
         <span className="inline-block mb-4 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold tracking-widest uppercase animate-fade-up">
           Stampa 3D professionale
         </span>
-        <h1 className="text-5xl sm:text-7xl font-bold text-white leading-tight animate-fade-up" style={{ animationDelay: '80ms' }}>
-          {titolo}<br /><span className="text-indigo-400">su ordinazione</span>
-        </h1>
+        {/* Non è un <h1>: il titolo qui è testo promozionale/editoriale (modificabile da Sanity,
+            può diventare un'offerta a tempo) — l'H1 vero e stabile della home è nella sezione sotto. */}
+        <p className="text-5xl sm:text-7xl font-bold text-white leading-tight animate-fade-up" style={{ animationDelay: '80ms' }}>
+          {slides[realIdx]?.titolo
+            ? titolo
+            : <>{titolo}<br /><span className="text-indigo-400">su ordinazione</span></>}
+        </p>
         <p className="mt-5 text-lg text-gray-300 max-w-xl mx-auto animate-fade-up" style={{ animationDelay: '160ms' }}>
           {sottotitolo ?? <>Dai vita alle tue idee.<br className="hidden sm:block" />Ogni pezzo stampato e rifinito con cura.</>}
         </p>

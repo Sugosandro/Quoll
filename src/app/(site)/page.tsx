@@ -9,6 +9,7 @@ import {
   getAllMiniature,
   getBestSellers,
   getMiniatureInOfferta,
+  getInEvidenza,
   getCreators,
   getSiteSettings,
   getNegoziPubblici,
@@ -24,10 +25,11 @@ const PIATTAFORMA_LABEL: Record<string, string> = {
 }
 
 export default async function HomePage() {
-  const [miniature, bestSellers, offerte, creators, siteSettings, negoziPubblici] = await Promise.all([
+  const [miniature, bestSellers, offerte, inEvidenza, creators, siteSettings, negoziPubblici] = await Promise.all([
     getAllMiniature(true),
     getBestSellers(true),
     getMiniatureInOfferta(true),
+    getInEvidenza(true),
     getCreators(),
     getSiteSettings(),
     getNegoziPubblici(),
@@ -53,48 +55,87 @@ export default async function HomePage() {
         </section>
       </div>
 
-      {/* Offerte — scorre sopra l'hero */}
-      {offerte.length > 0 && (
-        <section
-          className="bg-white"
-          style={{
-            position: 'relative',
-            zIndex: 10,
-            borderRadius: '1.5rem 1.5rem 0 0',
-            boxShadow: '0 -24px 80px rgba(0,0,0,0.35)',
-            minHeight: '90vh',
-          }}
-        >
-          <div className="max-w-6xl mx-auto px-4 pt-14 pb-20">
-            <AnimateIn distance={50} scale={0.97}>
-              <div className="mb-8">
-                <SiteBanner />
-              </div>
-            </AnimateIn>
-            <AnimateIn distance={50} scale={0.97}>
-              <div className="flex items-center justify-between mb-10">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Offerte</h2>
-                  <p className="text-gray-500 mt-1 text-sm">Prezzi scontati per un periodo limitato</p>
-                </div>
-                <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm">
-                  Vedi tutte
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </AnimateIn>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {offerte.map((m, i) => (
-                <AnimateIn key={m._id} delay={80 + i * 90} distance={60} scale={0.95}>
-                  <MiniatureCard miniatura={m} />
-                </AnimateIn>
-              ))}
+      {/* Intro + Offerte — scorre sopra l'hero. Sempre visibile (non solo con offerte attive)
+          perché contiene l'H1 della home, il testo che dice a Google/utenti di cosa parla il sito. */}
+      <section
+        className="bg-white"
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          borderRadius: '1.5rem 1.5rem 0 0',
+          boxShadow: '0 -24px 80px rgba(0,0,0,0.35)',
+          minHeight: '90vh',
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-4 pt-14 pb-20">
+          <AnimateIn distance={50} scale={0.97}>
+            <div className="text-center mb-12">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Miniature 3D per D&D e tabletop, stampate a Roma
+              </h1>
+              <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
+                Personaggi, mostri, veicoli ed edifici fantasy, sci-fi, storici e horror per le tue partite di
+                ruolo e i tuoi giochi da tavolo. Realizzate su ordinazione a Roma, spedite in tutta Italia.
+              </p>
             </div>
-          </div>
-        </section>
-      )}
+          </AnimateIn>
+          <AnimateIn distance={50} scale={0.97}>
+            <div className="mb-8">
+              <SiteBanner />
+            </div>
+          </AnimateIn>
+          {inEvidenza.length > 0 && (
+            <div className="mb-14">
+              <AnimateIn distance={50} scale={0.97}>
+                <div className="flex items-center justify-between mb-10">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">In evidenza</h2>
+                    <p className="text-gray-500 mt-1 text-sm">I pezzi che consiglio di più</p>
+                  </div>
+                  <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
+                    Vedi tutte
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
+              </AnimateIn>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {inEvidenza.map((m, i) => (
+                  <AnimateIn key={m._id} delay={i * 80} distance={50} scale={0.96}>
+                    <MiniatureCard miniatura={m} />
+                  </AnimateIn>
+                ))}
+              </div>
+            </div>
+          )}
+          {offerte.length > 0 && (
+            <>
+              <AnimateIn distance={50} scale={0.97}>
+                <div className="flex items-center justify-between mb-10">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">Offerte</h2>
+                    <p className="text-gray-500 mt-1 text-sm">Prezzi scontati per un periodo limitato</p>
+                  </div>
+                  <Link href="/catalogo" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm">
+                    Vedi tutte
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
+              </AnimateIn>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {offerte.map((m, i) => (
+                  <AnimateIn key={m._id} delay={80 + i * 90} distance={60} scale={0.95}>
+                    <MiniatureCard miniatura={m} />
+                  </AnimateIn>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
 
       {/* Best Sellers */}
       {bestSellers.length > 0 && (
