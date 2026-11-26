@@ -3,7 +3,7 @@ import { getAllSlugs, getNegoziPubblici } from '@/sanity/lib/queries'
 import { SITE_URL as BASE_URL } from '@/lib/siteUrl'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [slugs, negozi] = await Promise.all([getAllSlugs(), getNegoziPubblici()])
+  const [slugs, negozi] = await Promise.all([getAllSlugs(true), getNegoziPubblici()])
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, changeFrequency: 'weekly', priority: 1 },

@@ -381,9 +381,10 @@ export async function getAllCosti(): Promise<Costo[]> {
   )
 }
 
-export async function getAllSlugs(): Promise<{ slug: { current: string } }[]> {
+export async function getAllSlugs(soloVisibili = false): Promise<{ slug: { current: string } }[]> {
+  const filter = soloVisibili ? '_type == "miniatura" && visibileNelCatalogo != false' : '_type == "miniatura"'
   return client.fetch(
-    groq`*[_type == "miniatura"] { slug }`,
+    groq`*[${filter}] { slug }`,
     {},
     { next: { revalidate: 3600 } }
   )

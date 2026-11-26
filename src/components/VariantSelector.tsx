@@ -97,8 +97,11 @@ export default function VariantSelector({ varianti, nomeMiniatura }: VariantSele
                   -{Math.round((1 - selected.prezzoScontato! / selected.prezzo) * 100)}%
                 </span>
               </>
-            ) : (
+            ) : selected.prezzo != null ? (
               <p className="text-2xl font-bold text-indigo-700">€{selected.prezzo.toFixed(2)}</p>
+            ) : (
+              // Variante appena creata senza prezzo: mostra un segnaposto invece di andare in errore
+              <p className="text-lg font-semibold text-indigo-700">Prezzo da definire</p>
             )}
           </div>
           {scontoValido && selected.scadenzaSconto && (
