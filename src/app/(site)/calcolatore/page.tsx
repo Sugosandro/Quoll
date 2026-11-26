@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import CalcolatorePublicoClient from '@/components/CalcolatorePublicoClient'
+import Calcolatore from '@/components/Calcolatore'
 import { getProfiliPrezzo, getSiteSettings } from '@/sanity/lib/queries'
 
 export const revalidate = 60
@@ -23,7 +23,7 @@ export default async function CalcolatorePage() {
           Carica il file STL del tuo modello per ottenere una stima indicativa. Il file viene analizzato direttamente nel tuo browser — non viene inviato a nessun server.
         </p>
       </div>
-      <CalcolatorePublicoClient profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} />
+      <Calcolatore profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} />
     </div>
   )
 }

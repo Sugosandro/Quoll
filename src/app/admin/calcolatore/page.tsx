@@ -1,11 +1,14 @@
-import CalcolatoreClient from '@/components/CalcolatoreClient'
-import { getProfiliPrezzo } from '@/sanity/lib/queries'
+import Calcolatore from '@/components/Calcolatore'
+import { getProfiliPrezzo, getSiteSettings } from '@/sanity/lib/queries'
 import Link from 'next/link'
 
 export const revalidate = 60
 
 export default async function AdminCalcolatorePage() {
-  const profili = await getProfiliPrezzo(false) // tutti i profili, anche admin-only
+  const [profili, settings] = await Promise.all([
+    getProfiliPrezzo(false), // tutti i profili, anche admin-only
+    getSiteSettings(),
+  ])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -27,7 +30,7 @@ export default async function AdminCalcolatorePage() {
             </Link>
           </div>
         </div>
-        <CalcolatoreClient profili={profili} />
+        <Calcolatore profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} admin />
       </div>
     </div>
   )

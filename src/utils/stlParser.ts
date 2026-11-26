@@ -1,5 +1,6 @@
 export interface STLResult {
   volumeMm3: number
+  superficieMm2: number
   triangleCount: number
   overhangRatio: number
   boundingBox: { x: number; y: number; z: number } // dimensioni in mm
@@ -55,6 +56,7 @@ function parseBinary(buffer: ArrayBuffer): STLResult {
 
   return {
     volumeMm3: Math.abs(vol),
+    superficieMm2: totalArea,
     triangleCount: n,
     overhangRatio: totalArea > 0 ? overhangArea / totalArea : 0,
     boundingBox: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
@@ -86,6 +88,7 @@ function parseAscii(text: string): STLResult {
 
   return {
     volumeMm3: Math.abs(vol),
+    superficieMm2: totalArea,
     triangleCount: verts.length / 9,
     overhangRatio: totalArea > 0 ? overhangArea / totalArea : 0,
     boundingBox: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },

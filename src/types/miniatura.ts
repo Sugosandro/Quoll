@@ -63,17 +63,27 @@ export interface SiteSettings {
   heroSlides?: HeroSlide[]
 }
 
+export type Tecnologia = 'fff' | 'resina'
+
 export interface ProfiloPrezzo {
   _id: string
   nome: string
+  tecnologia?: Tecnologia
   materiale?: string
   visibileAlPubblico?: boolean
   densita: number
   costoFilamentoKg: number
+  fattoreRiempimento?: number
   velocitaStampaGh: number
+  altezzaLayerMm?: number
+  secondiPerLayer?: number
+  minutiAvvio?: number
   wattaggioW: number
   costoKwh: number
+  costoOraMacchina?: number
   costoOraLavoro: number
+  esponenteCurvaLavoro?: number
+  superficieRiferimentoCm2?: number
   finiture?: Finitura[]
   markupPct: number
   prezzoMinimo: number

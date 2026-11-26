@@ -341,9 +341,12 @@ export async function getRelated(
 }
 
 const profiloFields = groq`
-  _id, nome, materiale, visibileAlPubblico,
-  densita, costoFilamentoKg, velocitaStampaGh, wattaggioW, costoKwh,
-  costoOraLavoro, markupPct, prezzoMinimo,
+  _id, nome, tecnologia, materiale, visibileAlPubblico,
+  densita, costoFilamentoKg, fattoreRiempimento,
+  velocitaStampaGh, altezzaLayerMm, secondiPerLayer, minutiAvvio,
+  wattaggioW, costoKwh, costoOraMacchina,
+  costoOraLavoro, esponenteCurvaLavoro, superficieRiferimentoCm2,
+  markupPct, prezzoMinimo,
   finiture[]->{ _id, nome, oreLavoro }
 `
 

@@ -1,5 +1,7 @@
 import { defineField, defineType } from 'sanity'
 
+const isResina = ({ document }: { document?: Record<string, unknown> }) => document?.tecnologia === 'resina'
+
 export const profiloPrezzo = defineType({
   name: 'profiloPrezzo',
   title: 'Profilo di prezzo',
@@ -16,6 +18,21 @@ export const profiloPrezzo = defineType({
       title: 'Nome profilo',
       type: 'string',
       description: 'Es. "PLA Standard", "Resina Premium", "PETG Tecnico"',
+      validation: (R) => R.required(),
+    }),
+    defineField({
+      name: 'tecnologia',
+      title: 'Tecnologia',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'FFF / Filamento', value: 'fff' },
+          { title: 'Resina (MSLA)', value: 'resina' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'fff',
+      description: 'Nel calcolatore il profilo compare solo quando è selezionata questa tecnologia',
       validation: (R) => R.required(),
     }),
     defineField({
@@ -59,15 +76,51 @@ export const profiloPrezzo = defineType({
       group: 'materiale',
       validation: (R) => R.required().min(0),
     }),
+    defineField({
+      name: 'fattoreRiempimento',
+      title: 'Fattore di riempimento',
+      type: 'number',
+      initialValue: 0.7,
+      description: 'Quota di volume effettivamente piena (pareti + infill). Le miniature sono quasi solo pareti: ≈ 0.7',
+      group: 'materiale',
+      hidden: isResina,
+      validation: (R) => R.min(0.1).max(1),
+    }),
 
     // — Stampa —
     defineField({
-      name: 'velocitaStampaGh',
-      title: 'Velocità di stampa (g/h)',
+      name: 'altezzaLayerMm',
+      title: 'Altezza layer (mm)',
       type: 'number',
-      initialValue: 2.5,
-      description: 'Grammi di materiale stampati per ora. Miniature di qualità: 2–4 g/h',
+      description: 'FFF miniature ≈ 0.1 · Resina ≈ 0.05',
       group: 'stampa',
+      validation: (R) => R.min(0.01).max(1),
+    }),
+    defineField({
+      name: 'secondiPerLayer',
+      title: 'Secondi per layer',
+      type: 'number',
+      description: 'FFF: tempo minimo per layer (raffreddamento, spostamenti) ≈ 10 · Resina: esposizione + sollevamento ≈ 6.5',
+      group: 'stampa',
+      validation: (R) => R.min(0.5),
+    }),
+    defineField({
+      name: 'minutiAvvio',
+      title: 'Minuti di avvio',
+      type: 'number',
+      initialValue: 10,
+      description: 'Tempo fisso per stampa: riscaldamento e primo layer (FFF), layer di base e raft (resina)',
+      group: 'stampa',
+      validation: (R) => R.min(0),
+    }),
+    defineField({
+      name: 'velocitaStampaGh',
+      title: 'Portata di stampa (g/h)',
+      type: 'number',
+      initialValue: 15,
+      description: 'Solo FFF: grammi estrusi per ora, si somma al tempo dei layer',
+      group: 'stampa',
+      hidden: isResina,
       validation: (R) => R.required().min(0.1),
     }),
     defineField({
@@ -86,6 +139,15 @@ export const profiloPrezzo = defineType({
       group: 'stampa',
       validation: (R) => R.required().min(0),
     }),
+    defineField({
+      name: 'costoOraMacchina',
+      title: 'Usura macchina (€/h)',
+      type: 'number',
+      initialValue: 0.3,
+      description: 'Ammortamento, manutenzione e stampe fallite per ora di stampa (elettricità esclusa)',
+      group: 'stampa',
+      validation: (R) => R.min(0),
+    }),
 
     // — Lavoro manuale —
     defineField({
@@ -93,9 +155,29 @@ export const profiloPrezzo = defineType({
       title: 'Costo orario lavoro (€/h)',
       type: 'number',
       initialValue: 14,
-      description: 'Le ore per ogni finitura si gestiscono in Studio → Finiture',
+      description: 'Le ore per ogni finitura si gestiscono in Studio → Finiture (riferite a una mini standard da 28–32 mm)',
       group: 'lavoro',
       validation: (R) => R.required().min(0),
+    }),
+    defineField({
+      name: 'esponenteCurvaLavoro',
+      title: 'Curva ore di lavoro',
+      type: 'number',
+      initialValue: 0.75,
+      description:
+        'La prima ora si paga piena, le successive sempre meno. 1 = lineare · 0.75 = 7 h vengono pagate come 4.3 h · più basso = più sconto sulle lavorazioni lunghe',
+      group: 'lavoro',
+      validation: (R) => R.min(0.3).max(1),
+    }),
+    defineField({
+      name: 'superficieRiferimentoCm2',
+      title: 'Superficie di riferimento (cm²)',
+      type: 'number',
+      initialValue: 32,
+      description:
+        'Superficie della mini standard a cui si riferiscono le ore delle finiture (una 28–32 mm ≈ 30–33 cm²). Modelli più grandi o in scala maggiore richiedono proporzionalmente più ore',
+      group: 'lavoro',
+      validation: (R) => R.min(1),
     }),
 
     // — Finiture associate —
@@ -111,29 +193,31 @@ export const profiloPrezzo = defineType({
     // — Prezzo finale —
     defineField({
       name: 'markupPct',
-      title: 'Markup (%)',
+      title: 'Markup stampa (%)',
       type: 'number',
-      initialValue: 40,
-      description: 'Applicato sul totale dei costi',
+      initialValue: 25,
+      description: 'Applicato solo alla parte stampa (materiale, elettricità, usura), non al lavoro manuale',
       group: 'prezzo',
       validation: (R) => R.required().min(0),
     }),
     defineField({
       name: 'prezzoMinimo',
-      title: 'Prezzo minimo (€)',
+      title: 'Prezzo minimo stampa (€)',
       type: 'number',
-      initialValue: 10,
-      description: 'Soglia sotto la quale non si scende mai',
+      initialValue: 3,
+      description: 'Minimo per la sola parte stampa, prima della commissione negozio (il lavoro manuale si aggiunge sopra)',
       group: 'prezzo',
       validation: (R) => R.required().min(0),
     }),
   ],
   preview: {
-    select: { title: 'nome', mat: 'materiale', pub: 'visibileAlPubblico', media: 'immagine' },
-    prepare({ title, mat, pub, media }) {
+    select: { title: 'nome', mat: 'materiale', tec: 'tecnologia', pub: 'visibileAlPubblico', media: 'immagine' },
+    prepare({ title, mat, tec, pub, media }) {
       return {
         title,
-        subtitle: [mat, pub === false ? '(solo admin)' : null].filter(Boolean).join(' · '),
+        subtitle: [tec === 'resina' ? 'Resina' : tec === 'fff' ? 'FFF' : null, mat, pub === false ? '(solo admin)' : null]
+          .filter(Boolean)
+          .join(' · '),
         media,
       }
     },
