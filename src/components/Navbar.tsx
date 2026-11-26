@@ -14,7 +14,7 @@ const LINKS = [
   { href: '/calcolatore', label: 'Calcolatore' },
 ]
 
-const INSTAGRAM_URL = 'https://www.instagram.com/tommasosanto'
+const INSTAGRAM_URL = 'https://www.instagram.com/quollmini/'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
