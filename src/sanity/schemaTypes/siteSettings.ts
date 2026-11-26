@@ -14,6 +14,28 @@ export const siteSettings = defineType({
       validation: (R) => R.min(0).max(100),
     }),
     defineField({
+      name: 'scontiQuantita',
+      title: 'Sconti quantità (calcolatore)',
+      type: 'array',
+      description:
+        'Sconto sul totale dell\'ordine in base al numero di pezzi nel calcolatore prezzi. Vale lo scaglione più alto raggiunto',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({ name: 'minPezzi', title: 'Da quanti pezzi', type: 'number', validation: (R) => R.required().integer().min(2) }),
+            defineField({ name: 'scontoPct', title: 'Sconto (%)', type: 'number', validation: (R) => R.required().min(0).max(90) }),
+          ],
+          preview: {
+            select: { min: 'minPezzi', pct: 'scontoPct' },
+            prepare({ min, pct }) {
+              return { title: `Da ${min ?? '?'} pezzi: −${pct ?? '?'}%` }
+            },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: 'heroSlides',
       title: 'Slide Hero',
       type: 'array',

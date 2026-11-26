@@ -115,6 +115,7 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
   return client.fetch(
     groq`*[_type == "siteSettings" && _id == "siteSettings"][0] {
       percentualeNegozio,
+      scontiQuantita[] { minPezzi, scontoPct },
       heroSlides[] { _key, immagine, "videoFile": videoFile{ asset->{ url, mimeType } }, videoUrl, titolo, sottotitolo }
     }`,
     {},
@@ -343,9 +344,9 @@ export async function getRelated(
 const profiloFields = groq`
   _id, nome, tecnologia, materiale, visibileAlPubblico,
   densita, costoFilamentoKg, fattoreRiempimento,
-  velocitaStampaGh, altezzaLayerMm, secondiPerLayer, minutiAvvio,
+  velocitaStampaGh, altezzaLayerMm, secondiPerLayer, minutiAvvio, areaPiattoCm2,
   wattaggioW, costoKwh, costoOraMacchina,
-  costoOraLavoro, esponenteCurvaLavoro, superficieRiferimentoCm2,
+  costoOraLavoro, esponenteCurvaLavoro, superficieRiferimentoCm2, fattoreCopie,
   markupPct, prezzoMinimo,
   finiture[]->{ _id, nome, oreLavoro }
 `

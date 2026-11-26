@@ -58,8 +58,14 @@ export interface HeroSlide {
   sottotitolo?: string
 }
 
+export interface ScontoQuantita {
+  minPezzi: number
+  scontoPct: number
+}
+
 export interface SiteSettings {
   percentualeNegozio?: number
+  scontiQuantita?: ScontoQuantita[]
   heroSlides?: HeroSlide[]
 }
 
@@ -78,12 +84,14 @@ export interface ProfiloPrezzo {
   altezzaLayerMm?: number
   secondiPerLayer?: number
   minutiAvvio?: number
+  areaPiattoCm2?: number
   wattaggioW: number
   costoKwh: number
   costoOraMacchina?: number
   costoOraLavoro: number
   esponenteCurvaLavoro?: number
   superficieRiferimentoCm2?: number
+  fattoreCopie?: number
   finiture?: Finitura[]
   markupPct: number
   prezzoMinimo: number

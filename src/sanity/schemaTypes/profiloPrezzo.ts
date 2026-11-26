@@ -114,6 +114,15 @@ export const profiloPrezzo = defineType({
       validation: (R) => R.min(0),
     }),
     defineField({
+      name: 'areaPiattoCm2',
+      title: 'Area utile del piatto (cm²)',
+      type: 'number',
+      description:
+        'Larghezza × profondità del piatto in cm (es. 21.8 × 12.3 ≈ 268). Negli ordini con più pezzi serve a capire quanti ne stanno in una stampa: ogni stampa dura quanto il pezzo più alto',
+      group: 'stampa',
+      validation: (R) => R.min(10),
+    }),
+    defineField({
       name: 'velocitaStampaGh',
       title: 'Portata di stampa (g/h)',
       type: 'number',
@@ -178,6 +187,17 @@ export const profiloPrezzo = defineType({
         'Superficie della mini standard a cui si riferiscono le ore delle finiture (una 28–32 mm ≈ 30–33 cm²). Modelli più grandi o in scala maggiore richiedono proporzionalmente più ore',
       group: 'lavoro',
       validation: (R) => R.min(1),
+    }),
+
+    defineField({
+      name: 'fattoreCopie',
+      title: 'Lavoro sulle copie',
+      type: 'number',
+      initialValue: 0.7,
+      description:
+        'Quanto costa il lavoro su ogni copia aggiuntiva dello stesso modello rispetto alla prima (lavorazione in serie). 1 = come la prima · 0.7 = −30%',
+      group: 'lavoro',
+      validation: (R) => R.min(0.1).max(1),
     }),
 
     // — Finiture associate —

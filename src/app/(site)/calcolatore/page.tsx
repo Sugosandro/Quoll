@@ -23,7 +23,7 @@ export default async function CalcolatorePage() {
           Carica il file STL del tuo modello per ottenere una stima indicativa. Il file viene analizzato direttamente nel tuo browser — non viene inviato a nessun server.
         </p>
       </div>
-      <Calcolatore profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} />
+      <Calcolatore profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} scontiQuantita={settings?.scontiQuantita} />
     </div>
   )
 }

@@ -30,7 +30,7 @@ export default async function AdminCalcolatorePage() {
             </Link>
           </div>
         </div>
-        <Calcolatore profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} admin />
+        <Calcolatore profili={profili} percentualeNegozio={settings?.percentualeNegozio ?? 0} scontiQuantita={settings?.scontiQuantita} admin />
       </div>
     </div>
   )
